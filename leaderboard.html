@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Impact Leaderboard - Mana Vivekam</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { background-color: #FAF9F6; font-family: 'Plus Jakarta Sans', sans-serif; }
+    </style>
+</head>
+<body class="text-stone-800">
+    <!-- Header -->
+    <header class="bg-white border-b border-stone-100 sticky top-0 z-50">
+        <div class="max-w-4xl mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="index.html" class="flex items-center space-x-2">
+                <i class="fa-solid fa-crown text-orange-500 text-xl"></i>
+                <h1 class="text-xl font-extrabold tracking-tight">Impact Heroes</h1>
+            </a>
+            <a href="index.html" class="text-xs font-bold text-stone-500 hover:text-stone-900 transition uppercase tracking-widest">Close</a>
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto p-6 py-10">
+        <div class="text-center mb-10">
+            <h2 class="text-3xl font-black text-stone-900 mb-2">Top Food Donors</h2>
+            <p class="text-stone-500 text-sm font-medium">Recognizing the most active contributors in our mission to end hunger.</p>
+        </div>
+
+        <!-- Top 3 Podium -->
+        <div id="podium" class="flex items-end justify-center space-x-2 md:space-x-6 mb-16 pt-10 px-2">
+            <!-- Dynamic Podium -->
+        </div>
+
+        <!-- The List -->
+        <div class="bg-white rounded-[2rem] shadow-xl shadow-stone-200/50 border border-stone-100 overflow-hidden">
+            <div class="p-6 border-b border-stone-50 flex justify-between items-center bg-stone-50/50">
+                <h2 class="font-extrabold text-sm uppercase tracking-widest text-stone-400">Community Rankings</h2>
+                <span class="text-[10px] font-bold text-orange-600 px-3 py-1 bg-orange-50 rounded-full border border-orange-100">Live Updates</span>
+            </div>
+            <div id="leaderboardList" class="divide-y divide-stone-50">
+                <!-- Dynamic List Items -->
+            </div>
+        </div>
+    </main>
+
+    <script>
+        async function loadLeaderboard() {
+            try {
+                const res = await fetch('/api/public/leaderboard');
+                const data = await res.json();
+                renderLeaderboard(data);
+            } catch (e) { console.error(e); }
+        }
+
+        function renderLeaderboard(data) {
+            const podium = document.getElementById('podium');
+            const list = document.getElementById('leaderboardList');
+            
+            if (data.length === 0) {
+                list.innerHTML = '<p class="p-10 text-center text-stone-400 italic">No impact recorded yet. Be the first hero!</p>';
+                return;
+            }
+
+            // Podium logic (Top 3)
+            const top3 = data.slice(0, 3);
+            const others = data.slice(3);
+
+            // Reorder for visual podium: 2, 1, 3
+            const podiumOrder = [];
+            if (top3[1]) podiumOrder.push(top3[1]);
+            if (top3[0]) podiumOrder.push(top3[0]);
+            if (top3[2]) podiumOrder.push(top3[2]);
+            
+            podium.innerHTML = podiumOrder.map((hero) => {
+                const isWinner = hero.id === top3[0]?.id;
+                const height = isWinner ? 'h-48' : (hero.id === top3[1]?.id ? 'h-36' : 'h-32');
+                const color = isWinner ? 'bg-orange-500' : 'bg-stone-800';
+                const medal = isWinner ? '🥇' : (hero.id === top3[1]?.id ? '🥈' : '🥉');
+
+                return `
+                    <div class="flex flex-col items-center w-full max-w-[120px] md:max-w-[160px]">
+                        <div class="relative mb-4">
+                            <div class="absolute -top-2 -right-3 bg-orange-600 text-white text-[7px] font-black px-2 py-0.5 rounded-full shadow-lg border-2 border-white z-20 flex items-center whitespace-nowrap uppercase tracking-tighter shadow-orange-900/20">
+                                <i class="fa-solid fa-trophy mr-1 text-[6px]"></i>Top Donor
+                            </div>
+                            <div class="w-16 h-16 md:w-20 md:h-20 rounded-full border-4 ${isWinner ? 'border-orange-200 scale-110 shadow-lg' : 'border-stone-100'} overflow-hidden bg-white">
+                                ${hero.profileImage ? `<img src="${hero.profileImage}" class="w-full h-full object-cover">` : `<div class="w-full h-full flex items-center justify-center bg-stone-50 text-stone-300 text-2xl font-bold">${hero.name[0]}</div>`}
+                            </div>
+                            <div class="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-white rounded-full shadow-md text-sm p-1">${medal}</div>
+                        </div>
+                        <h3 class="font-black text-[10px] md:text-xs text-center mb-1 truncate w-full">${hero.name}</h3>
+                        <div class="${height} w-full ${color} rounded-t-2xl flex flex-col items-center justify-start pt-4 shadow-2xl transition-all duration-1000">
+                            <span class="text-white font-black text-lg md:text-2xl">${hero.totalMeals}</span>
+                            <span class="text-white/70 text-[8px] font-bold uppercase tracking-widest">Meals</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // List logic (4-15)
+            list.innerHTML = others.map((hero, idx) => `
+                <div class="p-5 flex items-center justify-between hover:bg-stone-50 transition group">
+                    <div class="flex items-center space-x-4">
+                        <span class="font-black text-stone-200 text-sm group-hover:text-orange-200 transition">#${idx + 4}</span>
+                        <div class="w-10 h-10 rounded-full overflow-hidden border border-stone-100 bg-white">
+                            ${hero.profileImage ? `<img src="${hero.profileImage}" class="w-full h-full object-cover">` : `<div class="w-full h-full flex items-center justify-center bg-stone-50 text-stone-300 font-bold">${hero.name[0]}</div>`}
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-xs text-stone-900">${hero.name}</h4>
+                            <p class="text-[9px] text-stone-400 font-bold uppercase tracking-widest">${hero.role}</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="font-black text-sm text-stone-900">${hero.totalMeals} <span class="text-[8px] text-stone-400 font-bold uppercase tracking-widest ml-1">Meals</span></div>
+                        <div class="text-[8px] text-orange-600 font-bold uppercase tracking-widest">${hero.donationsCount} Donations</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        loadLeaderboard();
+    </script>
+</body>
+</html>

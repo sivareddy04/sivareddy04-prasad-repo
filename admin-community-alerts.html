@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin - Community Alerts - Mana Vivekam</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>body { background-color: #FAF6F0; font-family: 'Plus Jakarta Sans', sans-serif; }</style>
+</head>
+<body class="text-stone-800">
+    <header class="bg-stone-900 text-white py-4 px-6 flex justify-between items-center shadow-lg">
+        <h1 class="text-xl font-bold"><i class="fa-solid fa-triangle-exclamation mr-2 text-red-500"></i>Community Alerts Management</h1>
+        <div class="flex items-center space-x-4">
+            <a href="admin-dashboard.html" class="text-sm bg-stone-700 px-4 py-2 rounded-lg hover:bg-stone-600 transition">Dashboard</a>
+            <button onclick="logout()" class="text-sm bg-stone-700 px-4 py-2 rounded-lg hover:bg-stone-600 transition">Logout</button>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto p-6">
+        <div class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
+            <div class="p-6 border-b border-stone-100 flex justify-between items-center">
+                <h2 class="font-bold text-lg text-red-800"><i class="fa-solid fa-list-ul mr-2"></i>Public Community Alerts</h2>
+                <div class="flex items-center space-x-4">
+                    <div class="relative w-64">
+                        <input type="text" id="alertSearch" onkeyup="filterAlerts()" placeholder="Search description or type..." class="w-full bg-stone-50 pl-10 pr-4 py-2 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500/30 transition text-sm">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-2.5 text-stone-400"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-stone-50 text-stone-500 text-sm">
+                        <tr>
+                            <th class="p-4">ID</th>
+                            <th class="p-4">Type</th>
+                            <th class="p-4">Description</th>
+                            <th class="p-4">Contact</th>
+                            <th class="p-4">Photo</th>
+                            <th class="p-4">Date</th>
+                            <th class="p-4">Status</th>
+                            <th class="p-4">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="alertsTable">
+                        <tr><td colspan="8" class="p-4 text-center text-stone-500">Loading alerts...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // --- Reality Check: Ensure we are on the correct server port ---
+        if (window.location.port !== '5000' && window.location.hostname === 'localhost') {
+            alert("⚠️ WARNING: You are accessing this via the wrong port (" + window.location.port + ").\n\nPlease visit: http://localhost:5000/admin-community-alerts.html");
+        } else if (window.location.protocol === 'file:') {
+            alert("⚠️ CRITICAL: You opened this as a file.\n\nPlease visit: http://localhost:5000/admin-community-alerts.html");
+        }
+
+        let allAlerts = [];
+
+        async function fetchData() {
+            const token = localStorage.getItem('token');
+            const role = localStorage.getItem('role');
+
+            if (!token) {
+                alert('Authentication token is missing. Please log in as an administrator.');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            if (role !== 'admin') {
+                alert('Access denied. Administrator privileges are required to view this page.');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            const headers = { 'Authorization': `Bearer ${token}` };
+
+            try {
+                const response = await fetch('/api/admin/community-alerts', { headers });
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        document.getElementById('alertsTable').innerHTML = '<tr><td colspan="8" class="p-4 text-center text-red-500 font-bold">Error 404: Admin API Connection Failed. Please restart server.js</td></tr>';
+                        return;
+                    }
+                    if (response.status === 401) {
+                        alert('Your session has expired or the token is invalid. Redirecting to login...');
+                        window.location.href = 'login.html';
+                        return;
+                    }
+                    const errData = await response.json().catch(() => ({}));
+                    throw new Error(errData.message || `Error ${response.status}`);
+                }
+                allAlerts = await response.json();
+                const searchQuery = document.getElementById('alertSearch').value.toLowerCase();
+                if (!searchQuery) renderTable(allAlerts);
+            } catch (err) {
+                console.error('Error fetching alerts:', err);
+                const msg = err.message || 'Check server connection';
+                document.getElementById('alertsTable').innerHTML = `<tr><td colspan="8" class="p-4 text-center text-red-500">Failed to load alerts: ${msg}</td></tr>`;
+            }
+        }
+
+        function filterAlerts() {
+            const query = document.getElementById('alertSearch').value.toLowerCase();
+            const filtered = allAlerts.filter(a => 
+                (a.description || '').toLowerCase().includes(query) || 
+                (a.type || '').toLowerCase().includes(query) ||
+                (a.id || '').toString().includes(query)
+            );
+            renderTable(filtered);
+        }
+
+        function renderTable(data) {
+            const tbody = document.getElementById('alertsTable');
+            tbody.innerHTML = data.map(alert => `
+                <tr class="border-b border-stone-50 hover:bg-stone-50 transition">
+                    <td class="p-4 text-sm font-bold text-stone-400">${alert.id}</td>
+                    <td class="p-4"><span class="text-[10px] font-bold uppercase text-red-600 px-2 py-0.5 bg-red-50 rounded-full">${(alert.type || 'unknown').replace(/_/g, ' ')}</span></td>
+                    <td class="p-4 text-sm">${alert.description}</td>
+                    <td class="p-4 text-xs text-stone-500">${alert.contact || 'Anonymous'}</td>
+                    <td class="p-4">
+                        ${alert.photo ? `<a href="/uploads/${alert.photo}" target="_blank"><img src="/uploads/${alert.photo}" alt="Alert Photo" class="w-10 h-10 object-cover rounded shadow-sm"></a>` : '<span class="text-stone-400 text-xs italic">No Photo</span>'}
+                    </td>
+                    <td class="p-4 text-xs text-stone-500">${alert.date || 'N/A'}</td>
+                    <td class="p-4">
+                        <span id="status-${alert.id}" class="px-2 py-1 rounded text-[10px] font-bold uppercase ${getStatusClass(alert.status?.toLowerCase())}">
+                            ${alert.status || 'pending'}
+                        </span>
+                    </td>
+                    <td class="p-4">
+                        <select id="statusSelect-${alert.id}" class="text-xs border rounded p-1 bg-white focus:outline-none">
+                            <option value="pending" ${alert.status?.toLowerCase() === 'pending' ? 'selected' : ''}>Pending</option>
+                            <option value="reviewed" ${alert.status?.toLowerCase() === 'reviewed' ? 'selected' : ''}>Reviewed</option>
+                            <option value="approved" ${alert.status?.toLowerCase() === 'approved' ? 'selected' : ''}>Approved</option>
+                            <option value="resolved" ${alert.status?.toLowerCase() === 'resolved' ? 'selected' : ''}>Resolved</option>
+                            <option value="rejected" ${alert.status?.toLowerCase() === 'rejected' ? 'selected' : ''}>Rejected</option>
+                        </select>
+                        <button onclick="updateAlertStatus(${alert.id})" class="ml-2 text-blue-600 hover:text-blue-800 transition" title="Save Status"><i class="fa-solid fa-floppy-disk"></i></button>
+                        <button onclick="deleteAlert(${alert.id})" class="ml-3 text-red-500 hover:text-red-700 transition" title="Delete Alert"><i class="fa-solid fa-trash-can"></i></button>
+                    </td>
+                </tr>
+            `).join('') || '<tr><td colspan="8" class="p-4 text-center text-stone-500">No community alerts found.</td></tr>';
+        }
+
+        function getStatusClass(status) {
+            switch (status?.toLowerCase()) {
+                case 'pending': return 'bg-amber-100 text-amber-700';
+                case 'reviewed': return 'bg-blue-100 text-blue-700';
+                case 'approved': 
+                case 'resolved': return 'bg-emerald-100 text-emerald-700';
+                case 'rejected': return 'bg-red-100 text-red-700';
+                default: return 'bg-stone-100 text-stone-700';
+            }
+        }
+
+        async function updateAlertStatus(alertId) {
+            const token = localStorage.getItem('token');
+            const newStatus = document.getElementById(`statusSelect-${alertId}`).value;
+
+            try { // Points to the consolidated admin endpoint
+                const response = await fetch(`/api/admin/community-alerts/${alertId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ status: newStatus })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to update alert status');
+                }
+
+                const result = await response.json();
+                alert(result.message);
+                // Update the displayed status immediately
+                const statusSpan = document.getElementById(`status-${alertId}`);
+                statusSpan.textContent = newStatus;
+                statusSpan.className = `px-2 py-1 rounded text-[10px] font-bold uppercase ${getStatusClass(newStatus)}`;
+            } catch (err) {
+                console.error('Error updating alert status:', err);
+                alert('Failed to update alert status.');
+            }
+        }
+
+        async function deleteAlert(alertId) {
+            if (!confirm('Are you sure you want to permanently delete this alert?')) return;
+            
+            const token = localStorage.getItem('token');
+            try {
+                const response = await fetch(`/api/admin/community-alerts/${alertId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!response.ok) throw new Error('Delete failed');
+                
+                alert('Alert deleted successfully.');
+                fetchData(); // Refresh the list
+            } catch (err) {
+                console.error(err);
+                alert('Failed to delete alert.');
+            }
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = 'index.html';
+        }
+
+        window.updateAlertStatus = updateAlertStatus;
+        window.deleteAlert = deleteAlert;
+        fetchData();
+        
+        // Auto refresh every 60 seconds
+        setInterval(fetchData, 60000);
+    </script>
+</body>
+</html>

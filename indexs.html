@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="te">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mana Vivekam Foundation</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Noto+Sans+Telugu:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans Telugu', sans-serif;
+            background-color: #FDFBF7; /* Warm background from mockup */
+        }
+        html { scroll-behavior: smooth; }
+    </style>
+</head>
+<body class="text-slate-800">
+
+    <header class="bg-[#FFFDF9] border-b border-orange-100 sticky top-0 z-50 shadow-xs">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <div class="text-xl md:text-2xl font-bold text-[#A34A38]">Mana Vivekam Foundation</div>
+            </div>
+            <nav class="hidden md:flex space-x-6 font-medium text-slate-600"> <!-- Login removed from here -->
+                <a href="#" class="text-[#A34A38] hover:text-[#82392B]">Home</a>
+                <a href="#" class="hover:text-[#A34A38]">About Us</a>
+                <a href="#orphanages" class="hover:text-[#A34A38]">Orphanages</a>
+                <a href="#" class="hover:text-[#A34A38]">Contact</a>
+                <a href="report-need.html" class="text-red-600 hover:text-red-700 font-bold">Report Need</a>
+            </nav>
+            <div class="flex items-center space-x-4">
+                <a href="login.html" id="loginLink" class="text-stone-600 hover:text-[#A34A38] font-medium transition text-sm">Login</a>
+                <a href="#donate" class="bg-[#A34A38] text-white px-5 py-2 rounded-md font-semibold hover:bg-[#82392B] transition duration-200 shadow-sm">Donate</a>
+            </div>
+        </div>
+    </header>
+
+    <section class="bg-[#A34A38] text-white py-16 px-4">
+        <div class="max-w-7xl mx-auto grid md:grid-cols-2 gap-12 items-center">
+            <div>
+                <h1 class="text-3xl md:text-5xl font-bold mb-4 leading-tight">Inspired to Make a Difference</h1>
+                <p class="text-xl text-orange-100 mb-6 font-semibold">"కొంత మంది కలిసి మరికొంత మందికి సహాయం చేయడం."</p>
+                <p class="text-orange-200 mb-8 max-w-lg">Our collective effort to help the poor, vulnerable, and support local orphanages to build a transparent and impactful community.</p>
+                <a href="#donate" class="bg-[#D97706] text-white px-6 py-3 rounded-md font-bold text-lg hover:bg-[#B45309] transition shadow-md">Support Our Cause</a>
+            </div>
+            <div class="grid grid-cols-2 gap-3 bg-[#82392B] p-4 rounded-xl shadow-inner">
+                <div class="bg-slate-300 h-40 rounded-lg flex items-center justify-center text-slate-700 font-medium">Photo 1</div>
+                <div class="bg-slate-300 h-40 rounded-lg flex items-center justify-center text-slate-700 font-medium">Photo 2</div>
+                <div class="bg-slate-300 h-40 rounded-lg flex items-center justify-center text-slate-700 font-medium">Photo 3</div>
+                <div class="bg-slate-300 h-40 rounded-lg flex items-center justify-center text-slate-700 font-medium">Photo 4</div>
+            </div>
+        </div>
+    </section>
+
+    <div class="bg-[#F3E8EE] py-6 text-center border-y border-pink-100 px-4">
+        <div class="max-w-3xl mx-auto flex flex-col sm:flex-row items-center justify-center gap-4">
+            <span class="p-3 bg-white rounded-full text-[#A34A38] shadow-sm text-xl"><i class="fa-solid fa-bullseye"></i></span>
+            <p class="text-xl font-bold text-slate-700">Goal: <span class="font-normal text-slate-600">Our collective effort to help the poor and vulnerable.</span></p>
+        </div>
+    </div>
+
+    <section id="stories" class="max-w-7xl mx-auto px-4 py-16">
+        <div class="grid md:grid-cols-3 gap-8">
+
+            <div class="bg-white rounded-xl shadow-md overflow-hidden border border-slate-100 group hover:shadow-xl transition-shadow duration-300">
+                <div class="relative bg-slate-300 h-48 flex items-center justify-center text-slate-600 overflow-hidden">
+                    <span class="absolute top-4 left-4 bg-emerald-600 text-white text-[10px] px-2.5 py-1 rounded-md font-bold uppercase tracking-wider z-10">Active Case</span>
+                    <img src="https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?auto=format&fit=crop&q=80&w=600" alt="Local Need" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                </div>
+                <div class="p-6">
+                    <h3 class="text-xl font-bold mb-2 text-slate-800">Local People's Stories</h3>
+                    <p class="text-slate-600 mb-4 text-sm">A poor person's struggle and information about local people's lifestyle and needs.</p>
+                    <a href="case-study-local-people.html" class="text-[#A34A38] font-semibold hover:underline text-sm">Read more <i class="fa-solid fa-arrow-right text-xs"></i></a>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl shadow-md overflow-hidden border border-slate-100 group hover:shadow-xl transition-shadow duration-300">
+                <div class="relative bg-slate-300 h-48 flex items-center justify-center text-slate-600 overflow-hidden">
+                    <span class="absolute top-4 left-4 bg-purple-600 text-white text-[10px] px-2.5 py-1 rounded-md font-bold uppercase tracking-wider z-10">Empowerment</span>
+                    <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=600" alt="Women Empowerment" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                <div class="p-6">
+                    <h3 class="text-xl font-bold mb-2 text-slate-800">Empowering Single Women</h3>
+                    <p class="text-slate-600 mb-4 text-sm">Widows and single mothers receiving training and financial support for independence.</p>
+                    <a href="case-study-women-empowerment.html" class="text-[#A34A38] font-semibold hover:underline text-sm">Read more <i class="fa-solid fa-arrow-right text-xs"></i></a>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl shadow-md overflow-hidden border border-slate-100 group hover:shadow-xl transition-shadow duration-300">
+                <div class="relative bg-slate-300 h-48 flex items-center justify-center text-slate-600 overflow-hidden">
+                    <span class="absolute top-4 left-4 bg-amber-600 text-white text-[10px] px-2.5 py-1 rounded-md font-bold uppercase tracking-wider z-10">Verified Center</span>
+                    <img src="https://images.unsplash.com/photo-1516627145497-ae6968895b74?auto=format&fit=crop&q=80&w=600" alt="Orphanages" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                </div>
+                <div class="p-6">
+                    <h3 class="text-xl font-bold mb-2 text-slate-800">Local Orphanages</h3>
+                    <p class="text-slate-600 mb-4 text-sm">Real images and data from verified local orphanages needing immediate support.</p>
+                    <a href="#" class="text-[#A34A38] font-semibold hover:underline text-sm">Read more <i class="fa-solid fa-arrow-right text-xs"></i></a>
+                </div>
+        </div>
+    </section>
+
+    <section class="bg-[#E2E8F0]/40 py-16 px-4 border-y border-slate-200">
+        <div class="max-w-7xl mx-auto text-center">
+            <h2 class="text-3xl font-bold mb-12 text-[#A34A38]">Flowchart of Assistance</h2>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 relative items-center">
+                <div class="flex flex-col items-center bg-white p-6 rounded-xl shadow-xs border border-slate-100">
+                    <div class="w-16 h-16 bg-orange-100 text-[#D97706] rounded-full flex items-center justify-center text-2xl mb-4 shadow-inner">
+                        <i class="fa-solid fa-child"></i>
+                    </div>
+                    <h4 class="font-bold text-lg mb-1">Orphan Child</h4>
+                    <p class="text-xs text-slate-500">Child or family in genuine need.</p>
+                </div>
+                
+                <div class="flex flex-col items-center bg-white p-6 rounded-xl shadow-xs border border-slate-100">
+                    <div class="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-2xl mb-4 shadow-inner">
+                        <i class="fa-solid fa-user-check"></i>
+                    </div>
+                    <h4 class="font-bold text-lg mb-1">Local Info Gatherer</h4>
+                    <p class="text-xs text-slate-500">Verified local validation and photo collection.</p>
+                </div>
+                
+                <div class="flex flex-col items-center bg-white p-6 rounded-xl shadow-xs border border-slate-100">
+                    <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-2xl mb-4 shadow-inner">
+                        <i class="fa-solid fa-building-shield"></i>
+                    </div>
+                    <h4 class="font-bold text-lg mb-1">Local Organization</h4>
+                    <p class="text-xs text-slate-500">Mana Vivekam manages & structure requests.</p>
+                </div>
+                
+                <div class="flex flex-col items-center bg-white p-6 rounded-xl shadow-xs border border-slate-100">
+                    <div class="w-16 h-16 bg-pink-100 text-pink-600 rounded-full flex items-center justify-center text-2xl mb-4 shadow-inner">
+                        <i class="fa-solid fa-hand-holding-dollar"></i>
+                    </div>
+                    <h4 class="font-bold text-lg mb-1">Your Donation</h4>
+                    <p class="text-xs text-slate-500">Secure Web & Financial flow directly to cause.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="max-w-7xl mx-auto px-4 py-16 grid md:grid-cols-2 gap-12">
+        <div>
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-2xl font-bold text-slate-800"><i class="fa-solid fa-list-check text-[#A34A38] mr-2"></i> List of Local Orphanages</h3>
+                <span class="flex items-center text-[10px] font-bold text-emerald-600 uppercase tracking-widest bg-emerald-50 px-2 py-1 rounded-full"><span class="w-1.5 h-1.5 bg-emerald-500 rounded-full mr-1.5 animate-pulse"></span> Live</span>
+            </div>
+            <div class="mb-4">
+                <div class="relative">
+                    <input type="text" placeholder="Search verified orphanages..." class="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#A34A38]">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-400"></i>
+                </div>
+            </div>
+            <div id="orphanageList" class="space-y-3">
+                <p class="text-slate-400 text-center py-4 italic">Loading verified homes...</p>
+            </div>
+        </div>
+
+        <div class="bg-[#FFFDF9] p-6 rounded-xl border border-orange-100 shadow-xs">
+            <h3 class="text-2xl font-bold mb-4 text-slate-800"><i class="fa-solid fa-shield-heart text-orange-500 mr-2"></i> Transparency & Impact</h3>
+            <p class="text-slate-600 mb-4 leading-relaxed">Donations are utilized with complete accountability. We provide tracking information to maintain public trust.</p>
+            <div class="bg-amber-50 border-l-4 border-amber-500 p-4 mb-6">
+                <p class="text-sm font-medium text-amber-800"><strong>సుదర్శకత కోసం:</strong> విరాళాలు అన్నీ నేరుగా అవసరంలో ఉన్నవారికి పారదర్శకంగా అందుతాయి.</p>
+            </div>
+            <div class="p-4 bg-slate-100 rounded-lg text-center font-mono text-xs text-slate-500">
+                [ Live Transparency Ledger / Audit Document Placeholder ]
+            </div>
+        </div>
+    </section>
+
+    <section id="donate" class="bg-slate-900 text-white py-16 px-4 text-center">
+        <div class="max-w-2xl mx-auto">
+            <h2 class="text-3xl font-bold mb-4">Support Our Cause Directly</h2>
+            <p class="text-slate-400 mb-8">Every contribution helps us reach another life. Secure online UPI, Card, and NetBanking payments are available.</p>
+            <button class="bg-[#D97706] hover:bg-[#B45309] text-white font-bold px-8 py-4 rounded-lg text-lg shadow-lg transition transform hover:-translate-y-0.5">
+                <i class="fa-solid fa-credit-card mr-2"></i> PAY ONLINE NOW
+            </button>
+        </div>
+    </section>
+
+    <section id="latest-uploads" class="max-w-7xl mx-auto px-4 py-16">
+        <div class="text-center max-w-2xl mx-auto mb-10">
+            <h2 class="text-3xl font-bold text-[#A34A38] mb-4">Latest Audit Photos</h2>
+            <p class="text-stone-500">Real uploads from field verification team. (Newest first)</p>
+        </div>
+
+        <div id="uploadsGrid" class="grid md:grid-cols-3 gap-8">
+            <p id="uploadsLoading" class="text-stone-500 text-center">Loading latest uploads...</p>
+        </div>
+    </section>
+
+    <section id="report-need" class="max-w-4xl mx-auto px-4 py-20 text-center">
+        <div class="bg-red-50 border border-red-100 p-8 rounded-2xl">
+            <h2 class="text-3xl font-bold text-red-700 mb-4">See someone in need?</h2>
+            <p class="text-slate-600 mb-8">Help our rapid response team by reporting food scarcity or children in distress.</p>
+            <a href="report-need.html" class="inline-block bg-red-600 text-white font-bold px-8 py-3 rounded-xl hover:bg-red-700 transition shadow-lg">
+                Report Situations Now
+            </a>
+        </div>
+    </section>
+
+    <footer class="bg-slate-950 text-slate-400 py-8 px-4 text-sm border-t border-slate-800">
+
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <div>
+                <p><strong>Founder's:</strong> Mana Vivekam Team</p>
+            </div>
+            <div>
+                <p>© 2026 Mana Vivekam Foundation. All Rights Reserved.</p>
+            </div>
+            <div>
+                <p><strong>Designer:</strong> UI Design Studio</p>
+            </div>
+        </div>
+</footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // --- Transparency Photo Loading ---
+            async function loadLatestUploads() {
+                const grid = document.getElementById('uploadsGrid');
+                const loading = document.getElementById('uploadsLoading');
+                if (!grid) return;
+                try {
+                    const response = await fetch('/api/reports');
+                    const uploads = await response.json();
+                    if (loading) loading.style.display = 'none';
+                    grid.innerHTML = (uploads || []).map(u => `
+                        <div class="bg-white rounded-xl shadow border border-slate-100 p-4">
+                            <img src="${u.imageUrl}" class="w-full h-40 object-cover rounded mb-2" />
+                            <h4 class="font-bold">${u.title || 'Audit'}</h4>
+                        </div>
+                    `).join('') || '<p>No photos yet.</p>';
+                } catch (err) { console.error(err); }
+            }
+
+            loadLatestUploads();
+
+            // --- Orphanage List Loading ---
+            let allOrphanages = [];
+            async function loadOrphanages() {
+                try {
+                    const res = await fetch('/api/orphanages');
+                    allOrphanages = await res.json();
+                    renderOrphanages(allOrphanages);
+                } catch (e) { console.error('Failed to load orphanages:', e); }
+            }
+
+            function filterOrphanages() {
+                const query = document.getElementById('orphanageSearch').value.toLowerCase();
+                const filtered = allOrphanages.filter(o => 
+                    (o.name || '').toLowerCase().includes(query) || 
+                    (o.location || '').toLowerCase().includes(query)
+                );
+                renderOrphanages(filtered);
+            }
+
+            function renderOrphanages(data) {
+                const list = document.getElementById('orphanageList');
+                if (!list) return;
+                list.innerHTML = data.map(o => `
+                    <div class="bg-white p-4 rounded-lg border border-slate-200 flex justify-between items-center shadow-xs">
+                        <div>
+                            <h4 class="font-bold text-slate-700">${o.name || 'Verified Home'}</h4>
+                            <p class="text-xs text-slate-500">${o.location || 'Local Region'} • ${o.childrenCount || 0} Children Registered</p>
+                        </div>
+                        <button onclick="location.href='#stories'" class="bg-[#A34A38] text-white text-xs px-4 py-2 rounded hover:bg-[#82392B]">View Reports</button>
+                    </div>
+                `).join('') || '<p class="text-slate-400 text-sm text-center py-4 italic">No matching homes found.</p>';
+            }
+
+            window.filterOrphanages = filterOrphanages;
+            loadOrphanages();
+
+            // --- Login Logic ---
+            function getDashboardUrl(role) {
+                const routes = { 'admin': '/admin-dashboard.html', 'anadhasaranalayam': '/orphanage-portal.html', 'agent': '/agent-tasks.html', 'hotel': '/food-donator.html', 'donator': '/donor-dashboard.html' };
+                return routes[role] || 'login.html';
+            }
+
+            const token = localStorage.getItem('token');
+            const role = localStorage.getItem('role');
+            const loginLink = document.getElementById('loginLink');
+            
+            if (token && role && loginLink) {
+                loginLink.textContent = 'Dashboard';
+                loginLink.href = getDashboardUrl(role);
+                
+                const logoutBtn = document.createElement('button');
+                logoutBtn.textContent = 'Logout';
+                logoutBtn.className = "text-slate-400 hover:text-red-600 transition text-sm ml-3";
+                logoutBtn.onclick = () => {
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('role');
+                    window.location.reload();
+                };
+                loginLink.after(logoutBtn);
+            }
+        });
+    </script>
+
+</body>
+</html>

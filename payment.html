@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="te">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Donate - Mana Vivekam Foundation</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Noto+Sans+Telugu:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+  <style>
+    body { font-family: 'Plus Jakarta Sans', 'Noto Sans Telugu', sans-serif; background-color: #FAF6F0; }
+  </style>
+</head>
+<body class="text-stone-800">
+  <header class="bg-[#FFFDF9] border-b border-orange-100 shadow-sm py-4">
+    <div class="max-w-7xl mx-auto px-6">
+      <a href="index.html" class="flex items-center space-x-2">
+        <span class="text-2xl text-[#A34A38]"><i class="fa-solid fa-hands-holding-child"></i></span>
+        <span class="text-xl font-bold tracking-tight text-[#A34A38]">Mana Vivekam</span>
+      </a>
+    </div>
+  </header>
+
+  <main class="max-w-xl mx-auto px-6 py-12">
+    <div class="bg-white rounded-2xl shadow-xl border border-stone-200 overflow-hidden">
+      <div class="bg-[#A34A38] p-8 text-white text-center">
+        <h1 class="text-2xl font-bold mb-2">Support a Noble Cause</h1>
+        <p class="text-orange-100 text-sm">Every contribution brings a smile and hope to a life.</p>
+      </div>
+
+      <form id="donationForm" class="p-8 space-y-6">
+        <div>
+          <label class="block text-sm font-semibold text-stone-700 mb-2">Full Name / పేరు</label>
+          <input type="text" id="donorName" required placeholder="Enter your name" class="w-full px-4 py-3 rounded-xl border border-stone-300 focus:ring-2 focus:ring-[#A34A38] focus:outline-none transition" />
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-stone-700 mb-2">Email Address</label>
+          <input type="email" id="donorEmail" required placeholder="your@email.com" class="w-full px-4 py-3 rounded-xl border border-stone-300 focus:ring-2 focus:ring-[#A34A38] focus:outline-none transition" />
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-semibold text-stone-700 mb-2">Phone Number</label>
+            <input type="tel" id="donorPhone" required placeholder="10-digit number" class="w-full px-4 py-3 rounded-xl border border-stone-300 focus:ring-2 focus:ring-[#A34A38] focus:outline-none transition" />
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-stone-700 mb-2">City/Address</label>
+            <input type="text" id="donorAddress" required placeholder="Your location" class="w-full px-4 py-3 rounded-xl border border-stone-300 focus:ring-2 focus:ring-[#A34A38] focus:outline-none transition" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-stone-700 mb-2">Donation Amount (₹)</label>
+          <div class="grid grid-cols-3 gap-3 mb-4">
+            <button type="button" onclick="setAmount(500)" class="py-2 bg-stone-100 hover:bg-stone-200 rounded-lg text-sm font-bold border border-stone-200 transition">₹500</button>
+            <button type="button" onclick="setAmount(1000)" class="py-2 bg-stone-100 hover:bg-stone-200 rounded-lg text-sm font-bold border border-stone-200 transition">₹1000</button>
+            <button type="button" onclick="setAmount(2000)" class="py-2 bg-stone-100 hover:bg-stone-200 rounded-lg text-sm font-bold border border-stone-200 transition">₹2000</button>
+          </div>
+          <input type="number" id="amount" required placeholder="Other Amount" min="1" class="w-full px-4 py-3 rounded-xl border border-stone-300 focus:ring-2 focus:ring-[#A34A38] focus:outline-none transition" />
+        </div>
+
+        <button type="submit" id="donateBtn" class="w-full bg-[#D97706] hover:bg-[#B45309] text-white font-bold py-4 rounded-xl text-lg shadow-lg transition transform hover:-translate-y-1 active:scale-95">
+          <i class="fa-solid fa-heart mr-2"></i> Donate Now
+        </button>
+      </form>
+
+      <div class="px-8 pb-8 text-center">
+        <div class="flex items-center justify-center space-x-4 text-xs text-stone-400 font-medium">
+          <span><i class="fa-solid fa-shield-check text-emerald-500 mr-1"></i> Secure Payment</span>
+          <span><i class="fa-solid fa-lock text-emerald-500 mr-1"></i> SSL Encrypted</span>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const RAZORPAY_KEY_ID = 'rzp_test_Stf9IV60v0Uh2i';
+
+    function setAmount(val) {
+      document.getElementById('amount').value = val;
+    }
+
+    document.getElementById('donationForm').onsubmit = async (e) => {
+      e.preventDefault();
+
+      const btn = document.getElementById('donateBtn');
+      const originalHtml = btn.innerHTML;
+      const amount = Number(document.getElementById('amount').value);
+      const donorName = document.getElementById('donorName').value;
+      const donorEmail = document.getElementById('donorEmail').value;
+      const donorPhone = document.getElementById('donorPhone').value;
+      const donorAddress = document.getElementById('donorAddress').value;
+
+      if (!amount || amount < 1) {
+        alert('Enter a valid donation amount');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Processing...';
+
+      try {
+        const headers = { 'Content-Type': 'application/json' };
+        const token = localStorage.getItem('token');
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
+        // Step 1: Create Order on Server
+        const orderRes = await fetch('/api/donate', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ amount, donorName, donorEmail, donorPhone, donorAddress })
+        });
+        const order = await orderRes.json();
+
+        // Step 2: Initialize Razorpay with Order ID
+        const options = {
+          "key": RAZORPAY_KEY_ID,
+          "amount": order.amount,
+          "currency": order.currency,
+          "name": "Mana Vivekam Foundation",
+          "description": "Donation for Children Welfare",
+          "order_id": order.id,
+          "image": "https://cdn-icons-png.flaticon.com/512/862/862856.png",
+          "handler": async function (response) {
+            // Step 3: Verify Payment Signature on Server
+            try {
+              const verifyRes = await fetch('/api/verify-payment', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(response)
+              });
+              const verifyResult = await verifyRes.json();
+              
+              if (verifyResult.status === 'success') {
+                alert('Thank you for your generous donation! Payment ID: ' + response.razorpay_payment_id);
+                window.location.href = token ? 'donor-dashboard.html' : 'login.html';
+              } else {
+                alert('Payment verification failed. Please contact support.');
+              }
+            } catch (err) {
+              console.error('Verification Error:', err);
+              window.location.href = 'donor-dashboard.html';
+            }
+          },
+          "prefill": {
+            "name": donorName,
+            "email": donorEmail,
+            "contact": donorPhone
+          },
+          "theme": { "color": "#A34A38" }
+        };
+
+        const rzp1 = new Razorpay(options);
+        rzp1.on('payment.failed', function (resp) {
+          alert('Payment Failed: ' + resp.error.description);
+          btn.disabled = false;
+          btn.innerHTML = originalHtml;
+        });
+        rzp1.open();
+      } catch (err) {
+        console.error('Order Creation Failed:', err);
+        alert('Failed to initiate payment. Please try again.');
+        btn.disabled = false;
+        btn.innerHTML = originalHtml;
+      }
+    };
+  </script>
+</body>
+</html>

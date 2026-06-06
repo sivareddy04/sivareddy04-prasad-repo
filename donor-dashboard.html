@@ -1,0 +1,1371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Donor Dashboard - Mana Vivekam</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <style>
+        body { background-color: #FAF6F0; font-family: 'Plus Jakarta Sans', sans-serif; }
+        .search-highlight { background-color: #fde68a; color: #92400e; padding: 0 1px; border-radius: 2px; font-weight: 600; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #A34A38; border-radius: 10px; }
+        @keyframes pulse-ring { 
+            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; } 
+            100% { transform: translate(-50%, -50%) scale(2.5); opacity: 0; } 
+        }
+        .pulse-marker { position: relative; transition: transform 1.2s cubic-bezier(0.4, 0, 0.2, 1); }
+        .pulse-marker::after {
+            content: '';
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background-color: rgba(59, 130, 246, 0.4);
+            border-radius: 50%;
+            animation: pulse-ring 2s infinite ease-out;
+            z-index: -1;
+            left: 50%; top: 50%;
+            transform: translate(-50%, -50%);
+        }
+        .tracking-agent-icon { overflow: visible !important; }
+    </style>
+</head>
+<body class="text-stone-800">
+    <header class="bg-[#A34A38] text-white py-4 px-6 shadow-lg">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <h1 class="text-xl font-bold flex items-center">
+                <i class="fa-solid fa-heart mr-2"></i>My Giving Dashboard <span id="donorDisplayName" class="ml-2 font-normal text-orange-200"></span>
+            </h1>
+            <div class="flex items-center space-x-2">
+                <a href="urgent-map.html" class="text-xs bg-red-600 px-4 py-2 rounded-lg hover:bg-red-700 transition font-bold shadow-sm">
+                    <i class="fa-solid fa-map-location-dot mr-2"></i>Urgent Map
+                </a>
+            <button onclick="toggleSettingsModal()" class="text-sm bg-[#82392B] px-4 py-2 rounded-lg hover:bg-stone-900 transition mr-2">
+                <i class="fa-solid fa-cog mr-2"></i>Settings
+            </button>
+            <button onclick="logout()" class="text-sm bg-[#82392B] px-4 py-2 rounded-lg hover:bg-stone-900 transition">
+                <i class="fa-solid fa-right-from-bracket mr-2"></i>Logout
+            </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto p-6 grid gap-8">
+        <div class="grid md:grid-cols-3 gap-6">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
+                <div class="flex items-center space-x-4 mb-4">
+                    <div id="profilePicContainer" class="w-16 h-16 bg-[#A34A38] text-white rounded-full flex items-center justify-center text-xl font-bold overflow-hidden shadow-sm">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-stone-500 font-semibold">Your Profile</h3>
+                <p id="profileDisplayName" class="text-xl font-bold text-stone-800 mb-1">Loading...</p>
+                <div id="streakContainer" class="hidden mb-2">
+                    <span class="text-[10px] font-black bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full border border-orange-200">
+                        <i class="fa-solid fa-fire mr-1"></i> <span id="streakCount">0</span> MONTH STREAK
+                    </span>
+                </div>
+                <div id="nextBadgeProgress" class="mt-2 w-full max-w-[150px]">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-[8px] font-black text-stone-400 uppercase">Impact Goal</span>
+                        <span id="nextBadgePercent" class="text-[8px] font-black text-[#A34A38]">0%</span>
+                    </div>
+                    <div class="h-1 bg-stone-100 rounded-full overflow-hidden"><div id="nextBadgeBar" class="h-full bg-[#A34A38] transition-all duration-1000" style="width: 0%"></div></div>
+                </div>
+                <div id="badgeContainer" class="flex flex-wrap gap-1.5 mb-2"></div>
+                    </div>
+                </div>
+                <p id="profileContact" class="text-sm text-stone-600 mb-1">Loading...</p>
+                <div class="space-y-1 mb-3">
+                    <p id="profileAddress" class="text-xs text-stone-500">Loading...</p>
+                    <p id="profileBio" class="text-xs text-stone-500 italic line-clamp-2">Loading bio...</p>
+                    <div id="liveLocationStatus" class="text-[10px] font-bold text-emerald-600 flex items-center hidden bg-emerald-50 w-fit px-2 py-1 rounded-full border border-emerald-100">
+                        <i class="fa-solid fa-location-crosshairs mr-1"></i> 
+                        Current Area: <span id="currentCoords" class="ml-1 font-mono"></span>
+                    </div>
+                </div>
+                <button onclick="toggleProfileModal()" class="bg-[#A34A38]/10 text-[#A34A38] text-xs px-3 py-1.5 rounded-lg font-bold hover:bg-[#A34A38] hover:text-white transition">
+                    <i class="fa-solid fa-user-pen mr-1"></i>Edit Profile
+                </button>
+            </div>
+
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
+                <h3 class="text-stone-500 font-semibold mb-2">Total Financial Gift</h3>
+                <div id="totalFinancial" class="text-3xl font-bold text-emerald-600">₹0</div>
+            </div>
+            <div class="bg-emerald-50 p-6 rounded-2xl border border-emerald-100 flex items-center justify-between">
+                <div><h3 class="text-emerald-800 font-bold">Help Again</h3><p class="text-xs">Sponsor a meal.</p></div>
+                <a href="payment.html" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold">Donate</a>
+            </div>
+        </div>
+
+        <!-- Nearby Orphanages Section -->
+        <div class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
+            <div class="p-6 border-b border-stone-100 flex justify-between items-center">
+                <div>
+                    <h2 class="font-bold text-lg text-stone-800">Nearby Orphanages</h2>
+                    <p class="text-xs text-stone-500">Find homes in your vicinity that need help.</p>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <input type="text" id="nearbySearch" oninput="applyNearbySort()" placeholder="Search name or area..." class="text-[10px] md:text-xs border border-stone-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#A34A38] bg-white w-24 md:w-48">
+                    <select id="nearbySort" onchange="applyNearbySort()" class="text-[10px] md:text-xs border border-stone-200 rounded-lg px-2 py-1.5 focus:outline-none bg-white">
+                        <option value="distance">Nearest First</option>
+                        <option value="urgent">Urgent Needs First</option>
+                    </select>
+                    <button onclick="fetchNearbyOrphanages()" class="text-xs bg-[#A34A38]/10 text-[#A34A38] px-3 py-1.5 rounded-lg font-bold hover:bg-[#A34A38] hover:text-white transition">
+                        <i class="fa-solid fa-location-crosshairs mr-1"></i>Find Nearby
+                    </button>
+                </div>
+            </div>
+            <div id="nearbyMap" class="h-64 w-full border-b border-stone-100 hidden"></div>
+            <div class="p-4">
+                <div id="nearbyList" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <p class="col-span-full text-center text-stone-400 py-4 italic">Click "Find Nearby" to see local homes.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid lg:grid-cols-3 gap-8">
+            <div class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
+                <div class="p-6 border-b border-stone-100"><h2 class="font-bold text-lg text-[#A34A38]">Recent Donations</h2></div>
+                <div class="p-4"><table class="w-full text-left text-sm">
+                    <thead><tr class="text-stone-400 border-b"><th>Date</th><th>Amount</th><th>Status</th></tr></thead>
+                    <tbody id="financialTable"><tr><td colspan="3" class="p-4 text-center">Loading...</td></tr></tbody>
+                </table></div>
+            </div>
+            <div class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden flex flex-col">
+                <div class="p-6 border-b border-stone-100 flex justify-between items-center">
+                    <h2 class="font-bold text-lg text-blue-800"><i class="fa-solid fa-hand-holding-heart mr-2"></i>My Commitments</h2>
+                    <span id="activeCount" class="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-bold uppercase tracking-widest">0 Tracked</span>
+                </div>
+                <div id="acceptedNeedsList" class="p-4 space-y-4 overflow-y-auto max-h-[350px] custom-scrollbar min-h-[150px]">
+                    <p class="text-center text-stone-400 py-10 italic text-xs">Connecting to logisitics...</p>
+                </div>
+            </div>
+            <div class="bg-orange-50 p-6 rounded-2xl border border-orange-100 flex flex-col justify-center space-y-4">
+                <div><h3 class="text-orange-800 font-bold">Donate Food</h3><p class="text-xs">Share excess food.</p></div>
+                <button onclick="toggleFoodModal()" class="bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-orange-700 transition">Share</button>
+            </div>
+        </div>
+
+        <!-- Activity Feed Section -->
+        <div class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
+            <div class="p-6 border-b border-stone-100">
+                <h2 class="font-bold text-lg text-stone-800">Your Activity Feed</h2>
+                <p class="text-sm text-stone-500">Recent contributions and their statuses.</p>
+            </div>
+            <div class="p-4">
+                <div id="activityFeed" class="space-y-4">
+                    <p class="text-center text-stone-400">Loading activity...</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-stone-900 text-white px-6 py-3 rounded-full shadow-2xl transform translate-y-20 opacity-0 transition-all duration-500 z-[100] flex items-center space-x-2 pointer-events-none">
+        <i class="fa-solid fa-circle-check text-emerald-400"></i>
+        <span id="toastMessage">Success!</span>
+    </div>
+
+    <!-- Profile Edit Modal -->
+    <div id="profileModal" class="fixed inset-0 bg-stone-900/50 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-3xl w-full max-w-lg shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
+            <div class="p-8 pb-4 border-b border-stone-100 flex justify-between items-center">
+                <h2 class="text-xl font-bold text-stone-800">Update Your Profile</h2>
+                <button onclick="toggleProfileModal()" class="text-stone-400 hover:text-stone-600 transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="p-8 pt-4 overflow-y-auto">
+            <form id="profileForm" class="space-y-4">
+                <div id="profileError" class="bg-red-50 text-red-700 p-3 rounded-lg text-sm hidden border border-red-100"></div>
+                <input type="hidden" id="profLat">
+                <input type="hidden" id="profLon">
+                <div>
+                    <label class="block text-xs font-bold text-stone-500 mb-1">Username</label>
+                    <input type="text" id="profUsername" required class="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-[#A34A38] outline-none bg-stone-50">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-stone-500 mb-1">New Password (leave blank to keep current)</label>
+                    <input type="password" id="profPassword" class="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-[#A34A38] outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-stone-500 mb-1">Display Name</label>
+                    <input type="text" id="profDisplayName" required class="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-[#A34A38] outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-stone-500 mb-1">Contact Number</label>
+                    <input type="tel" id="profContactNumber" required class="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-[#A34A38] outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-stone-500 mb-1">Profile Image</label>
+                    <div class="flex items-center space-x-3 mb-2">
+                        <div id="profImagePreview" class="w-20 h-20 bg-stone-100 rounded-full flex items-center justify-center text-stone-400 overflow-hidden shadow-inner">
+                            <i class="fa-solid fa-image text-2xl"></i>
+                        </div>
+                        <button type="button" onclick="clearProfileImage()" class="text-xs text-red-600 hover:underline"><i class="fa-solid fa-xmark mr-1"></i>Clear Image</button>
+                    </div>
+                    <input type="file" id="profImage" accept="image/*" class="w-full text-sm text-stone-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#A34A38]/10 file:text-[#A34A38] hover:file:bg-[#A34A38]/20">
+                </div>
+                <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="block text-xs font-bold text-stone-500">Address</label>
+                        <button type="button" onclick="fetchLiveLocation(event, 'profAddress')" class="text-[10px] text-[#A34A38] font-bold hover:underline">
+                            <i class="fa-solid fa-location-crosshairs mr-1"></i>Get Live Location
+                        </button>
+                    </div>
+                    <textarea id="profAddress" class="w-full px-4 py-2 border rounded-xl h-20 focus:ring-2 focus:ring-[#A34A38] outline-none"></textarea>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-stone-500 mb-1">Bio (Optional)</label>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="block text-xs font-bold text-stone-500">Bio (Optional)</label>
+                        <span id="profBioCharCount" class="text-[10px] text-stone-400">0/500</span>
+                    </div>
+                    <textarea id="profBio" maxlength="500" oninput="updateProfBioCount()" class="w-full px-4 py-2 border rounded-xl h-20 focus:ring-2 focus:ring-[#A34A38] outline-none"></textarea>
+                </div>
+                <div class="bg-stone-50 p-4 rounded-2xl flex items-center justify-between border border-stone-100">
+                    <div>
+                        <label class="block text-xs font-bold text-stone-700">Location Access</label>
+                        <p class="text-[10px] text-stone-500">Allow others to see your general vicinity for logistics.</p>
+                    </div>
+                    <input type="checkbox" id="profLocationEnabled" class="w-5 h-5 accent-[#A34A38]">
+                </div>
+            </form>
+            </div>
+            <div class="p-8 pt-4 border-t border-stone-100 flex space-x-3">
+                <button type="button" onclick="toggleProfileModal()" class="flex-1 py-3 text-stone-500 font-bold hover:bg-stone-50 rounded-xl transition">Cancel</button>
+                <button type="submit" id="saveProfileBtn" form="profileForm" class="flex-1 py-3 bg-[#A34A38] text-white rounded-xl font-bold shadow-lg hover:bg-[#82392B] transition">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Food Donation Modal -->
+    <div id="foodModal" class="fixed inset-0 bg-stone-900/50 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-3xl w-full max-w-lg p-8 shadow-2xl">
+            <h2 class="text-2xl font-bold text-stone-800 mb-6">Donate Food</h2>
+            <form id="foodForm" class="space-y-4">
+                <div id="foodError" class="bg-red-50 text-red-700 p-3 rounded-lg text-sm hidden border border-red-100"></div>
+                <div>
+                    <label class="block text-xs font-bold text-stone-500 mb-1">Food Item(s)</label>
+                    <input type="text" id="foodItem" required placeholder="e.g. Rice, Veg Curry" class="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-orange-500 outline-none">
+                    <div class="flex flex-wrap gap-2 mt-2">
+                        <button type="button" onclick="setFood('Rice')" class="text-[10px] font-bold bg-[#A34A38]/10 text-[#A34A38] px-2.5 py-1 rounded-full border border-[#A34A38]/20 hover:bg-[#A34A38] hover:text-white transition">Rice</button>
+                        <button type="button" onclick="setFood('Veg Curry')" class="text-[10px] font-bold bg-[#A34A38]/10 text-[#A34A38] px-2.5 py-1 rounded-full border border-[#A34A38]/20 hover:bg-[#A34A38] hover:text-white transition">Veg Curry</button>
+                        <button type="button" onclick="setFood('Biryani')" class="text-[10px] font-bold bg-[#A34A38]/10 text-[#A34A38] px-2.5 py-1 rounded-full border border-[#A34A38]/20 hover:bg-[#A34A38] hover:text-white transition">Biryani</button>
+                        <button type="button" onclick="setFood('Bread/Roti')" class="text-[10px] font-bold bg-[#A34A38]/10 text-[#A34A38] px-2.5 py-1 rounded-full border border-[#A34A38]/20 hover:bg-[#A34A38] hover:text-white transition">Bread/Roti</button>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-stone-500 mb-1">Quantity</label>
+                        <input type="text" id="foodQuantity" required placeholder="e.g. 5kg, 10 packs" class="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-orange-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-stone-500 mb-1">Serves (No. of People)</label>
+                        <input type="number" id="servesCount" required placeholder="e.g. 20" class="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-orange-500 outline-none">
+                    </div>
+                </div>
+                <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="block text-xs font-bold text-stone-500">Pickup Address</label>
+                        <button type="button" onclick="fetchLiveLocation(event)" class="text-[10px] text-orange-600 font-bold hover:underline">
+                            <i class="fa-solid fa-location-crosshairs mr-1"></i>Get Live Location
+                        </button>
+                    </div>
+                    <textarea id="foodAddress" required class="w-full px-4 py-2 border rounded-xl h-20 focus:ring-2 focus:ring-orange-500 outline-none" placeholder="Enter full address or use live location"></textarea>
+                </div>
+                <div class="flex space-x-3 pt-4">
+                    <button type="button" onclick="toggleFoodModal()" class="flex-1 py-3 text-stone-500 font-bold hover:text-stone-800 transition">Cancel</button>
+                    <button type="submit" id="saveFoodBtn" class="flex-1 py-3 bg-orange-600 text-white rounded-xl font-bold shadow-lg hover:bg-orange-700 transition">Donate Now</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Live Tracking Modal -->
+    <div id="trackingModal" class="fixed inset-0 bg-stone-900/60 backdrop-blur-sm hidden flex items-center justify-center z-[200] p-4">
+        <div class="bg-white rounded-3xl w-full max-w-2xl shadow-2xl flex flex-col h-[80vh] overflow-hidden">
+            <div class="p-6 border-b border-stone-100 flex justify-between items-center">
+                <div>
+                    <h2 class="text-xl font-bold text-stone-800">Live Delivery Tracking</h2>
+                    <p id="trackingAgentName" class="text-xs text-stone-500">Agent is en route to the orphanage.</p>
+                </div>
+                <button onclick="closeTrackingModal()" class="text-stone-400 hover:text-stone-600 transition cursor-pointer"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="flex-1 relative bg-stone-100">
+                <div id="trackingMapDiv" class="h-full w-full"></div>
+                <button id="recenterBtn" onclick="recenterOnAgent()" class="absolute bottom-6 right-6 z-[1000] hidden bg-blue-600 text-white px-4 py-2 rounded-full font-bold shadow-lg hover:bg-blue-700 transition flex items-center space-x-2">
+                    <i class="fa-solid fa-location-crosshairs"></i>
+                    <span>Re-center on Agent</span>
+                </button>
+            </div>
+            <div class="p-6 bg-white border-t border-stone-100 grid grid-cols-3 gap-4 text-center">
+                <div class="bg-stone-50 p-3 rounded-2xl">
+                    <p class="text-[10px] text-stone-400 font-bold uppercase mb-1">Status</p>
+                    <p id="trackStatusLabel" class="text-sm font-bold text-blue-600">In Transit</p>
+                </div>
+                <div class="bg-stone-50 p-3 rounded-2xl">
+                    <p class="text-[10px] text-stone-400 font-bold uppercase mb-1">Distance</p>
+                    <p id="trackDistLabel" class="text-sm font-bold text-stone-800">-- km</p>
+                </div>
+                <div class="bg-stone-50 p-3 rounded-2xl">
+                    <p class="text-[10px] text-stone-400 font-bold uppercase mb-1">ETA</p>
+                    <p id="trackETALabel" class="text-sm font-bold text-emerald-600">-- mins</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="fixed inset-0 bg-stone-900/50 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-3xl w-full max-md p-8 shadow-2xl">
+            <h2 class="text-2xl font-bold text-stone-800 mb-6">Settings</h2>
+            <div class="space-y-6">
+                <div class="flex items-center justify-between p-4 bg-stone-50 rounded-2xl border border-stone-100">
+                    <div>
+                        <p class="font-bold text-stone-800">Location Services</p>
+                        <p class="text-xs text-stone-500">Enable live location sharing for better service.</p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="settingLocEnabled" class="sr-only peer" onchange="updateLocationSetting(this.checked)">
+                        <div class="w-11 h-6 bg-stone-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#A34A38]"></div>
+                    </label>
+                </div>
+                <button onclick="toggleSettingsModal()" class="w-full py-3 text-stone-500 font-bold hover:bg-stone-50 rounded-xl transition">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let toastTimeout;
+        let nearbyMap;
+        let markersLayer;
+        let cachedNearbyOrphanages = [];
+        let userCoords = null;
+        let notifiedOrphanages = new Set();
+        let notifiedUrgentRequests = new Set();
+        let notifiedReceivedRequests = new Set();
+        let isFirstSummaryLoad = true;
+        const criticalNeedSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+
+        async function directContribute(requestId, remaining, item, unit) {
+            const amount = prompt(`This home needs ${remaining} ${unit} of ${item}. How much can you provide?`, remaining);
+            if (!amount || isNaN(amount) || parseFloat(amount) <= 0) return;
+
+            const token = localStorage.getItem('token');
+            try {
+                const res = await fetch(`/api/donor/requests/${requestId}/contribute`, {
+                    method: 'POST',
+                    headers: { 
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ amount: parseFloat(amount) })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    showToast(data.message);
+                    loadSummary();
+                    fetchNearbyOrphanages();
+                } else {
+                    alert(data.message || "Failed to contribute.");
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        const RAZORPAY_KEY_ID = 'rzp_test_Stf9IV60v0Uh2i';
+        async function initiateQuickPayment(orphanageName) {
+            const amountStr = prompt(`How much would you like to donate to ${orphanageName}? (INR)`, "500");
+            if (!amountStr || isNaN(amountStr) || parseFloat(amountStr) <= 0) return;
+            const amount = parseFloat(amountStr);
+
+            const token = localStorage.getItem('token');
+            const options = {
+                "key": RAZORPAY_KEY_ID,
+                "amount": amount * 100,
+                "currency": "INR",
+                "name": "Mana Vivekam Foundation",
+                "description": `Donation for ${orphanageName}`,
+                "handler": async function (response) {
+                    try {
+                        await fetch('/api/donate', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                            body: JSON.stringify({ amount, donorName: document.getElementById('profileDisplayName').innerText, razorpay_payment_id: response.razorpay_payment_id })
+                        });
+                        showToast('Thank you for your donation!');
+                        loadSummary();
+                    } catch (e) { console.error(e); }
+                },
+                "theme": { "color": "#A34A38" }
+            };
+            const rzp = new Razorpay(options);
+            rzp.open();
+        }
+
+        // Helper function for status styling
+        function getStatusClass(status) {
+            status = status?.toLowerCase();
+            if (status === 'success' || status === 'completed') return 'bg-emerald-100 text-emerald-700';
+            if (status === 'claimed' || status === 'reached' || status === 'accepted') return 'bg-blue-100 text-blue-700';
+            if (status === 'pending' || status === 'available') return 'bg-amber-100 text-amber-700';
+            if (status === 'failed') return 'bg-red-100 text-red-700';
+            return 'bg-stone-100 text-stone-500';
+        }
+
+        const GEOCODE_CACHE_KEY = 'manaVivekam_geocode_cache';
+        const geocodeCache = JSON.parse(localStorage.getItem(GEOCODE_CACHE_KEY) || '{}');
+
+        async function getPlaceName(lat, lon) {
+            const cacheKey = `${lat.toFixed(4)}_${lon.toFixed(4)}`;
+            if (geocodeCache[cacheKey]) {
+                return geocodeCache[cacheKey];
+            }
+
+            try {
+                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
+                const data = await res.json();
+                if (data && data.address) {
+                    const name = data.address.city || data.address.town || data.address.village || data.address.suburb || data.display_name.split(',')[0];
+                    geocodeCache[cacheKey] = name;
+                    localStorage.setItem(GEOCODE_CACHE_KEY, JSON.stringify(geocodeCache));
+                    return name;
+                }
+            } catch (e) { console.error("Geocoding error:", e); }
+            return `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
+        }
+
+        async function loadSummary() {
+            const token = localStorage.getItem('token');
+            if (!token) return window.location.href = 'login.html';
+            try {
+                const [summaryRes, profileRes] = await Promise.all([
+                    fetch('/api/donor/summary', { headers: { 'Authorization': `Bearer ${token}` } }),
+                    fetch('/api/donor/profile', { headers: { 'Authorization': `Bearer ${token}` } })
+                ]);
+
+                if (summaryRes.status === 401 || profileRes.status === 401) {
+                    console.warn("Unauthorized access detected. Logging out...");
+                    return logout();
+                }
+
+                const data = await summaryRes.json();
+                const profile = await profileRes.json();
+
+                // Update Profile Display
+                document.getElementById('donorDisplayName').innerText = `(${profile.displayName || profile.username})`;
+                document.getElementById('profileDisplayName').innerText = profile.displayName || profile.username;
+                document.getElementById('profileContact').innerText = profile.contactNumber || 'N/A';
+                document.getElementById('profileAddress').innerText = profile.address || 'N/A';
+                document.getElementById('profileBio').innerText = profile.bio || 'No bio provided.';
+
+                // Update Streak display
+                const streakContainer = document.getElementById('streakContainer');
+                if (data.streak > 0) {
+                    streakContainer.classList.remove('hidden');
+                    document.getElementById('streakCount').innerText = data.streak;
+                } else {
+                    streakContainer.classList.add('hidden');
+                }
+
+                // Render Badges
+                const badgeContainer = document.getElementById('badgeContainer');
+                if (badgeContainer) {
+                    badgeContainer.innerHTML = (data.badges || []).map(b => `
+                        <div class="flex items-center space-x-1 ${b.bg} ${b.color} px-2 py-0.5 rounded-full border border-current/10 shadow-xs transition hover:scale-105 cursor-default" title="${b.name}">
+                            <i class="fa-solid ${b.icon} text-[8px]"></i>
+                            <span class="text-[9px] font-bold uppercase tracking-wider">${b.name}</span>
+                        </div>
+                    `).join('') || (data.totalFinancial > 0 ? '' : '<span class="text-[9px] text-stone-400 italic">Help others to unlock badges!</span>');
+                }
+
+                // Update Profile Picture
+                const picContainer = document.getElementById('profilePicContainer');
+                if (profile.profileImage) {
+                    picContainer.innerHTML = `<img src="${profile.profileImage}" class="w-full h-full object-cover">`;
+                } else {
+                    picContainer.innerHTML = `<i class="fa-solid fa-user"></i>`;
+                }
+
+                // Populate Profile Image Preview in Modal
+                const profImagePreview = document.getElementById('profImagePreview');
+                if (profile.profileImage) {
+                    profImagePreview.innerHTML = `<img src="${profile.profileImage}" class="w-full h-full object-cover">`;
+                } else {
+                    profImagePreview.innerHTML = `<i class="fa-solid fa-image text-2xl"></i>`;
+                }
+                // Populate Profile Modal
+                document.getElementById('profUsername').value = profile.username || '';
+                document.getElementById('profDisplayName').value = profile.displayName || '';
+                document.getElementById('profContactNumber').value = profile.contactNumber || '';
+                document.getElementById('profAddress').value = profile.address || '';
+                document.getElementById('profBio').value = profile.bio || '';
+                document.getElementById('profLocationEnabled').checked = profile.locationEnabled !== 0;
+
+                if (profile.latitude && profile.longitude) {
+                    const statusDiv = document.getElementById('liveLocationStatus');
+                    if (statusDiv) {
+                        statusDiv.classList.remove('hidden');
+                        getPlaceName(profile.latitude, profile.longitude).then(name => {
+                            document.getElementById('currentCoords').innerText = name;
+                        });
+                        document.getElementById('profLat').value = profile.latitude;
+                        document.getElementById('profLon').value = profile.longitude;
+                    }
+                }
+
+                updateProfBioCount(); // Initialize bio char count
+                document.getElementById('totalFinancial').innerText = `₹${data.totalFinancial || 0}`;
+                
+                document.getElementById('financialTable').innerHTML = data.recentFinancial?.map(d => `
+                    <tr class="border-b">
+                        <td class="py-2">${new Date(d.createdAt).toLocaleDateString()}</td>
+                        <td class="font-bold">₹${d.amount}</td>
+                        <td><span class="text-[10px] font-bold uppercase px-2 py-1 rounded ${getStatusClass(d.status)}">${d.status}</span></td>
+                    </tr>
+                `).join('') || '<tr><td colspan="3" class="p-4 text-center">No records.</td></tr>';
+
+                // Check for geofence alerts before rendering
+                checkGeofenceAlerts(data.acceptedRequests);
+                checkReceivedNotifications(data.acceptedRequests);
+
+                const needsContainer = document.getElementById('acceptedNeedsList');
+                const activeCount = document.getElementById('activeCount');
+
+                if (!data.acceptedRequests || data.acceptedRequests.length === 0) {
+                    activeCount.innerText = "0 Tracked";
+                    needsContainer.innerHTML = `
+                        <div class="p-8 text-center text-xs text-stone-400">
+                            <div class="mb-2 opacity-20"><i class="fa-solid fa-hand-holding-heart text-3xl"></i></div>
+                            <p class="font-medium">No active commitments.</p>
+                            <p class="mt-1">Check the <a href="urgent-map.html" class="text-red-600 font-bold hover:underline">Urgent Map</a> to help a home!</p>
+                        </div>`;
+                } else {
+                    activeCount.innerText = `${data.acceptedRequests.length} Tracked`;
+                    needsContainer.innerHTML = data.acceptedRequests.map(r => {
+                        const isLive = r.status === 'claimed' || r.status === 'reached';
+                        const waMsg = encodeURIComponent(`Hi ${r.orphanageName}, I have accepted your request for ${r.item} on Mana Vivekam. I am working on it!`);
+                        return `
+                        <div class="p-5 rounded-2xl border-2 border-blue-50 bg-white hover:border-blue-200 transition group relative overflow-hidden shadow-sm">
+                            ${isLive ? '<div class="absolute top-0 left-0 w-1 h-full bg-blue-500 animate-pulse"></div>' : ''}
+                            <div class="flex justify-between items-start mb-3">
+                                <div>
+                                    <h4 class="text-sm font-black text-stone-900 leading-tight">${r.item}</h4>
+                                    <p class="text-[10px] text-stone-400 font-bold uppercase tracking-widest mt-0.5">${r.quantity}</p>
+                                </div>
+                                <span class="text-[9px] font-black uppercase px-2 py-1 rounded-full ${getStatusClass(r.status)}">${r.status}</span>
+                            </div>
+                            <p class="text-[11px] text-stone-600 mb-4 line-clamp-2 italic bg-stone-50 p-2 rounded-lg border border-stone-100">"${r.description}"</p>
+                            <p class="text-[10px] text-stone-500 mb-4 flex items-center">
+                                <i class="fa-solid fa-building-ngo mr-1 opacity-50"></i> ${r.orphanageName}
+                            </p>
+                            <div class="flex items-center justify-between">
+                                <div class="flex space-x-1.5">
+                                    <div class="w-1.5 h-1.5 rounded-full ${r.status === 'pending' ? 'bg-amber-400' : 'bg-emerald-500'}"></div>
+                                    <div class="w-1.5 h-1.5 rounded-full ${r.status === 'claimed' ? 'bg-blue-500 animate-pulse' : (['reached', 'completed'].includes(r.status) ? 'bg-emerald-500' : 'bg-stone-200')}"></div>
+                                    <div class="w-1.5 h-1.5 rounded-full ${r.status === 'reached' ? 'bg-blue-500 animate-pulse' : (r.status === 'completed' ? 'bg-emerald-500' : 'bg-stone-200')}"></div>
+                                    <div class="w-1.5 h-1.5 rounded-full ${r.status === 'completed' ? 'bg-emerald-500' : 'bg-stone-200'}"></div>
+                                </div>
+                                <div class="flex space-x-2">
+                                    ${r.orphanagePhone ? `<a href="https://wa.me/91${r.orphanagePhone}?text=${waMsg}" target="_blank" class="text-[10px] font-black text-emerald-600 flex items-center bg-emerald-50 px-2.5 py-1.5 rounded-xl hover:bg-emerald-100 transition"><i class="fa-brands fa-whatsapp mr-1 text-sm"></i> REPLY</a>` : ''}
+                                    ${isLive ? 
+                                        `<button onclick="openTrackingModal(${r.id})" class="text-[10px] font-black text-blue-600 flex items-center bg-blue-50 px-2.5 py-1.5 rounded-xl hover:bg-blue-100 transition">
+                                            <i class="fa-solid fa-location-crosshairs mr-1"></i> TRACK
+                                        </button>` : 
+                                        `<span class="text-[9px] text-stone-300 font-bold uppercase py-1.5">Awaiting Agent</span>`
+                                    }
+                                </div>
+                            </div>
+                        </div>`;
+                    }).join('');
+                }
+
+                // Combine and render activity feed
+                const allActivities = [
+                    ...(data.recentFinancial || []).map(d => ({ ...d, type: 'financial', date: new Date(d.createdAt) })),
+                    ...(data.recentFood || []).map(f => ({ ...f, type: 'food', date: new Date(f.createdAt) })),
+                    ...(data.acceptedRequests || []).map(r => ({ ...r, type: 'accepted', date: new Date(r.createdAt) }))
+                ].sort((a, b) => b.date - a.date); // Sort descending by date
+
+                renderActivityFeed(allActivities);
+
+            } catch (err) { console.error(err); }
+        }
+
+        function renderActivityFeed(activities) {
+            const feedContainer = document.getElementById('activityFeed');
+            if (activities.length === 0) {
+                feedContainer.innerHTML = '<p class="text-center text-stone-400">No recent activity to display.</p>';
+                return;
+            }
+
+            feedContainer.innerHTML = activities.map(activity => {
+                const dateStr = activity.date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+                let description = '';
+                let icon = '';
+                let color = '';
+
+                if (activity.type === 'financial') {
+                    description = `You donated ₹${activity.amount}. Status: ${activity.status}.`;
+                    icon = 'fa-solid fa-money-bill-transfer';
+                    color = 'text-emerald-600';
+                } else if (activity.type === 'food') {
+                    description = `You shared "${activity.foodItem}" (Qty: ${activity.quantity}). Status: ${activity.status}.`;
+                    icon = 'fa-solid fa-bowl-food';
+                    color = 'text-orange-600';
+                } else if (activity.type === 'accepted') {
+                    description = activity.status === 'received' 
+                        ? `Your donation of "${activity.item}" was received by ${activity.orphanageName}.`
+                        : `You committed to providing "${activity.item}" for ${activity.orphanageName}.`;
+                    icon = activity.status === 'received' ? 'fa-solid fa-check-double' : 'fa-solid fa-hand-holding-heart';
+                    color = activity.status === 'received' ? 'text-emerald-600' : 'text-blue-600';
+                }
+
+                return `
+                    <div class="flex items-start space-x-3 p-3 bg-stone-50 rounded-lg border border-stone-100">
+                        <div class="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full ${color} bg-white shadow-sm">
+                            <i class="${icon} text-sm"></i>
+                        </div>
+                        <div class="flex-grow">
+                            <p class="text-sm text-stone-700 leading-snug">${description}</p>
+                            ${activity.type === 'accepted' && activity.status === 'received' && activity.thankYouNote ? `
+                                <div class="mt-3 p-4 bg-emerald-50 rounded-2xl border border-emerald-100 relative">
+                                    <i class="fa-solid fa-quote-left absolute -top-2 -left-1 text-emerald-200 text-xl"></i>
+                                    <p class="text-xs text-emerald-800 italic leading-relaxed">"${activity.thankYouNote}"</p>
+                                    <p class="text-[9px] font-bold text-emerald-600 uppercase mt-2">— Note from ${activity.orphanageName}</p>
+                                </div>
+                            ` : ''}
+                            ${activity.type === 'food' && activity.deliveryImageUrl ? `
+                                <div class="mt-2 rounded-xl overflow-hidden border border-stone-200 w-32 shadow-sm group">
+                                    <a href="${activity.deliveryImageUrl}" target="_blank" class="block relative">
+                                        <img src="${activity.deliveryImageUrl}" alt="Delivery proof" class="w-full h-24 object-cover">
+                                        <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                                            <i class="fa-solid fa-magnifying-glass-plus text-white"></i>
+                                        </div>
+                                    </a>
+                                    <div class="bg-white px-2 py-1 border-t border-stone-100 text-center"><span class="text-[8px] font-bold text-emerald-600 uppercase tracking-tighter"><i class="fa-solid fa-circle-check mr-1"></i>Proof of Delivery</span></div>
+                                </div>
+                            ` : ''}
+                            <p class="text-xs text-stone-400 mt-1">${dateStr}</p>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            toastMessage.innerText = message;
+            
+            clearTimeout(toastTimeout);
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+            
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        function toggleProfileModal() {
+            document.getElementById('profileModal').classList.toggle('hidden');
+            document.getElementById('profileModal').classList.toggle('flex');
+            document.getElementById('profileError').classList.add('hidden'); // Hide error on toggle
+        }
+
+        function updateProfBioCount() {
+            const bio = document.getElementById('profBio');
+            const count = document.getElementById('profBioCharCount');
+            if (!bio || !count) return;
+            count.innerText = `${bio.value.length}/500`;
+            if (bio.value.length >= 450) count.classList.add('text-red-500');
+            else count.classList.remove('text-red-500');
+        }
+
+        document.getElementById('profImage').addEventListener('change', function(event) {
+            const preview = document.getElementById('profImagePreview');
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => { preview.innerHTML = `<img src="${e.target.result}" class="w-full h-full object-cover">`; };
+                reader.readAsDataURL(file);
+            } else {
+                preview.innerHTML = `<i class="fa-solid fa-image text-2xl"></i>`;
+            }
+        });
+
+        function clearProfileImage() {
+            document.getElementById('profImage').value = ''; // Clear the file input
+            document.getElementById('profImagePreview').innerHTML = `<i class="fa-solid fa-image text-2xl"></i>`;
+        }
+
+        function toggleFoodModal() {
+            document.getElementById('foodModal').classList.toggle('hidden');
+            document.getElementById('foodModal').classList.toggle('flex');
+            document.getElementById('foodError').classList.add('hidden');
+        }
+
+        function setFood(item) {
+            const input = document.getElementById('foodItem');
+            input.value = input.value ? `${input.value}, ${item}` : item;
+        }
+
+        async function toggleSettingsModal() {
+            const modal = document.getElementById('settingsModal');
+            if (modal.classList.contains('hidden')) {
+                try {
+                    const res = await fetch('/api/user/settings', {
+                        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                    });
+                    const data = await res.json();
+                    document.getElementById('settingLocEnabled').checked = data.locationEnabled === 1;
+                } catch (e) { console.error(e); }
+            }
+            modal.classList.toggle('hidden');
+        }
+
+        async function checkGlobalUrgentNeeds() {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+            try {
+                const res = await fetch('/api/donor/active-requests', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!res.ok) return;
+                const requests = await res.json();
+                
+                requests.forEach(req => {
+                    if (req.isUrgent && !notifiedUrgentRequests.has(req.id)) {
+                        if ("Notification" in window && Notification.permission === "granted") {
+                            new Notification("GLOBAL URGENT NEED!", {
+                                body: `${req.orphanageName} needs ${req.item} immediately!`,
+                                icon: "https://cdn-icons-png.flaticon.com/512/862/862856.png",
+                                tag: `urgent-global-${req.id}`
+                            });
+                            criticalNeedSound.play().catch(e => {});
+                            notifiedUrgentRequests.add(req.id);
+                        }
+                    }
+                });
+            } catch (e) { console.error("Global check error", e); }
+        }
+
+        let trackingInterval;
+        let trackingMap;
+        let agentMarker;
+        let destinationMarker;
+        let pathPolyline;
+        let remainingPathPolyline;
+        let breadcrumbs = [];
+        let isFollowingAgent = true;
+        let currentAgentPos = null;
+        let lastAgentPos = null;
+        let currentBearing = 0;
+
+        function openTrackingModal(requestId) {
+            document.getElementById('trackingModal').classList.remove('hidden');
+            document.getElementById('trackingModal').classList.add('flex');
+            isFollowingAgent = true;
+            lastAgentPos = null;
+            currentBearing = 0;
+            document.getElementById('recenterBtn').classList.add('hidden');
+            
+            // Clear previous destination markers/routes
+            if (destinationMarker) { destinationMarker.remove(); destinationMarker = null; }
+            if (remainingPathPolyline) { remainingPathPolyline.remove(); remainingPathPolyline = null; }
+            
+            setTimeout(() => {
+                if (!trackingMap) {
+                    trackingMap = L.map('trackingMapDiv').setView([15.9129, 79.7400], 13);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(trackingMap);
+                    pathPolyline = L.polyline([], { color: '#10b981', weight: 4, opacity: 0.8 }).addTo(trackingMap);
+                    remainingPathPolyline = L.polyline([], { color: '#2563eb', weight: 4, dashArray: '10, 10', opacity: 0.6 }).addTo(trackingMap);
+                    
+                    // Detect manual interaction (pan/zoom) to stop auto-following
+                    trackingMap.on('dragstart zoomstart', () => {
+                        isFollowingAgent = false;
+                        document.getElementById('recenterBtn').classList.remove('hidden');
+                    });
+                }
+                startLiveTracking(requestId);
+            }, 300);
+        }
+
+        async function fetchOSRMRoute(start, end) {
+            try {
+                const url = `https://router.project-osrm.org/route/v1/driving/${start[1]},${start[0]};${end[1]},${end[0]}?overview=full&geometries=geojson`;
+                const res = await fetch(url);
+                const data = await res.json();
+                if (data.routes && data.routes.length > 0) {
+                    // Swap [lon, lat] from GeoJSON to [lat, lon] for Leaflet
+                    return data.routes[0].geometry.coordinates.map(coord => [coord[1], coord[0]]);
+                }
+            } catch (e) { console.error("OSRM Route Error", e); }
+            return null;
+        }
+
+        function calculateBearing(lat1, lon1, lat2, lon2) {
+            const φ1 = lat1 * Math.PI / 180;
+            const φ2 = lat2 * Math.PI / 180;
+            const Δλ = (lon2 - lon1) * Math.PI / 180;
+            const y = Math.sin(Δλ) * Math.cos(φ2);
+            const x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
+            return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
+        }
+
+        async function startLiveTracking(requestId) {
+            if (trackingInterval) clearInterval(trackingInterval);
+            breadcrumbs = [];
+            
+            const updateTracking = async () => {
+                try {
+                    const res = await fetch(`/api/donor/tracking/${requestId}`, {
+                        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                    });
+                    const data = await res.json();
+                    if (data.agentLat && data.agentLon) {
+                        currentAgentPos = [data.agentLat, data.agentLon];
+                        
+                        if (lastAgentPos && (lastAgentPos[0] !== currentAgentPos[0] || lastAgentPos[1] !== currentAgentPos[1])) {
+                            currentBearing = calculateBearing(lastAgentPos[0], lastAgentPos[1], currentAgentPos[0], currentAgentPos[1]);
+                        }
+                        lastAgentPos = currentAgentPos;
+                        
+                        // Geofence trigger: Alert if agent enters 500m radius during live tracking
+                        if (data.agentDistance && data.agentDistance <= 500) {
+                            const uniqueKey = `geofence-${requestId}`;
+                            if (!notifiedUrgentRequests.has(uniqueKey)) {
+                                sendArrivalNotification(data.orphanageName || 'the orphanage', data.agentDistance);
+                                notifiedUrgentRequests.add(uniqueKey);
+                            }
+                        }
+
+                        const pos = currentAgentPos;
+                        breadcrumbs.push(pos);
+                        if (!agentMarker) {
+                            const icon = L.divIcon({
+                                className: 'tracking-agent-icon',
+                                html: `<div class="relative">
+                                         <div class="absolute -top-9 left-1/2 -translate-x-1/2 bg-white border border-stone-200 rounded-lg px-2 py-0.5 text-[7px] font-bold shadow-sm flex items-center space-x-1 z-10 whitespace-nowrap">
+                                           <span class="w-1.5 h-1.5 bg-red-600 rounded-full animate-pulse"></span>
+                                           <span class="agent-speed-label">LIVE • ${Math.round(data.speed || 0)} km/h</span>
+                                         </div>
+                                         <div class="pulse-marker" style="transform: rotate(${currentBearing}deg)">
+                                           <div class="w-6 h-6 bg-blue-600 border-2 border-white rounded-full shadow-lg flex items-center justify-center">
+                                             <i class="fa-solid fa-location-arrow text-[10px] text-white -rotate-45"></i>
+                                           </div>
+                                         </div>
+                                       </div>`,
+                                iconSize: [24,24],
+                                iconAnchor: [12, 12]
+                            });
+                            agentMarker = L.marker(pos, {icon}).addTo(trackingMap);
+                        } else { 
+                            agentMarker.setLatLng(pos); 
+                            const el = agentMarker.getElement();
+                            if (el) {
+                                const markerDiv = el.querySelector('.pulse-marker');
+                                if (markerDiv) markerDiv.style.transform = `rotate(${currentBearing}deg)`;
+                                const speedEl = el.querySelector('.agent-speed-label');
+                                if (speedEl) speedEl.innerText = `LIVE • ${Math.round(data.speed || 0)} km/h`;
+                            }
+                        }
+                        pathPolyline.setLatLngs(breadcrumbs);
+                        
+                        // Handle Destination Marker & Remaining Route
+                        if (data.orphanageLat && data.orphanageLon) {
+                            const destPos = [data.orphanageLat, data.orphanageLon];
+                            
+                            if (!destinationMarker) {
+                                const orphanageIcon = L.icon({
+                                    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+                                    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                                    iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+                                });
+                                destinationMarker = L.marker(destPos, { icon: orphanageIcon }).addTo(trackingMap)
+                                    .bindPopup(`<b>Orphanage:</b> ${data.orphanageName || 'Destination'}`);
+                            }
+
+                            const routeCoords = await fetchOSRMRoute(pos, destPos);
+                            if (routeCoords) remainingPathPolyline.setLatLngs(routeCoords);
+                        }
+
+                        if (isFollowingAgent) {
+                            trackingMap.panTo(pos, { animate: true });
+                        }
+
+                        document.getElementById('trackDistLabel').innerText = `${(data.agentDistance/1000).toFixed(1)}km`;
+                        document.getElementById('trackETALabel').innerText = `${data.eta || '--'} mins`;
+                    }
+                } catch (e) {}
+            };
+            updateTracking();
+            trackingInterval = setInterval(updateTracking, 10000);
+        }
+
+        /**
+         * Triggers a system-level notification and plays alert sound for agent arrival
+         */
+        function sendArrivalNotification(name, distance) {
+            if (Notification.permission !== "granted") return;
+            new Notification("🚀 Agent is Arriving!", {
+                body: `The delivery for ${name} is only ${Math.round(distance)}m away.`,
+                icon: "https://cdn-icons-png.flaticon.com/512/862/862856.png",
+                tag: "geofence-alert"
+            });
+            criticalNeedSound.play().catch(e => {});
+        }
+
+        function recenterOnAgent() {
+            isFollowingAgent = true;
+            document.getElementById('recenterBtn').classList.add('hidden');
+            if (currentAgentPos) {
+                trackingMap.panTo(currentAgentPos, { animate: true });
+            }
+        }
+
+        function closeTrackingModal() {
+            document.getElementById('trackingModal').classList.add('hidden');
+            document.getElementById('trackingModal').classList.remove('flex');
+            if (trackingInterval) clearInterval(trackingInterval);
+        }
+
+        /**
+         * Checks for requests that have been marked as 'received' and notifies the donor.
+         */
+        function checkReceivedNotifications(requests) {
+            if (!requests || Notification.permission !== "granted") return;
+            
+            requests.forEach(req => {
+                if (req.status === 'received' && !notifiedReceivedRequests.has(req.id)) {
+                    if (!isFirstSummaryLoad) {
+                        new Notification("Delivery Confirmed! 🎉", {
+                            body: `${req.orphanageName} has received your donation of "${req.item}".`,
+                            icon: "https://cdn-icons-png.flaticon.com/512/862/862856.png",
+                            tag: `received-${req.id}`
+                        });
+                        const chime = new Audio('https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3');
+                        chime.play().catch(e => {});
+                    }
+                    notifiedReceivedRequests.add(req.id);
+                }
+            });
+            isFirstSummaryLoad = false;
+        }
+
+        /**
+         * Geofence Monitoring Logic
+         * Alerts the donor when an agent is close to the destination
+         */
+        function checkGeofenceAlerts(acceptedRequests) {
+            if (!acceptedRequests || Notification.permission !== "granted") return;
+            
+            acceptedRequests.forEach(req => {
+                const threshold = 500; // 500 meters
+                const uniqueKey = `geofence-${req.id}`;
+
+                if (req.agentDistance && req.agentDistance <= threshold && !notifiedUrgentRequests.has(uniqueKey)) {
+                    sendArrivalNotification(req.orphanageName, req.agentDistance);
+                    notifiedUrgentRequests.add(uniqueKey);
+                }
+            });
+        }
+
+        async function autoLocationSync() {
+            if (!navigator.geolocation) return;
+            
+            navigator.geolocation.getCurrentPosition(async (pos) => {
+                const { latitude, longitude } = pos.coords;
+                try {
+                    const res = await fetch('/api/user/location', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+                        body: JSON.stringify({ latitude, longitude })
+                    });
+                    if (res.ok) {
+                        const statusDiv = document.getElementById('liveLocationStatus');
+                        if (statusDiv) {
+                            statusDiv.classList.remove('hidden');
+                            getPlaceName(latitude, longitude).then(name => {
+                                document.getElementById('currentCoords').innerText = name;
+                            });
+                        }
+                    }
+                } catch (e) { console.warn("Auto-location sync failed."); }
+            });
+        }
+
+        async function updateLocationSetting(enabled) {
+            try {
+                await fetch('/api/user/settings', {
+                    method: 'PUT',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify({ locationEnabled: enabled })
+                });
+                showToast(enabled ? 'Location enabled' : 'Location disabled');
+                if (enabled) autoLocationSync();
+            } catch (e) { console.error(e); }
+        }
+
+        async function fetchNearbyOrphanages() {
+            const list = document.getElementById('nearbyList');
+            list.innerHTML = '<div class="col-span-full text-center py-4 text-xs"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Detecting your location...</div>';
+
+            if (!navigator.geolocation) {
+                alert("Geolocation not supported.");
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(async (pos) => {
+                userCoords = { lat: pos.coords.latitude, lon: pos.coords.longitude };
+                try {
+                    const res = await fetch(`/api/donor/nearby-orphanages?lat=${userCoords.lat}&lon=${userCoords.lon}`, {
+                        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                    });
+                    
+                    const data = await res.json();
+                    
+                    if (res.status === 401) {
+                        alert("Your session has expired. Please login again.");
+                        return logout();
+                    }
+
+                    if (!res.ok) {
+                        throw new Error(data.message || 'Server error');
+                    }
+                    cachedNearbyOrphanages = Array.isArray(data) ? data : [];
+
+                    // Automated Browser Notifications for Critical Needs
+                    if ("Notification" in window && Notification.permission === "granted" && Array.isArray(cachedNearbyOrphanages)) {
+                        cachedNearbyOrphanages.forEach(o => {
+                            if (o.hasUrgentNeed && !notifiedOrphanages.has(o.id)) {
+                                new Notification("Critical Need Nearby!", {
+                                    body: `${o.name} in ${o.location || 'your area'} has an urgent requirement.`,
+                                    icon: "https://cdn-icons-png.flaticon.com/512/862/862856.png",
+                                    tag: `urgent-${o.id}` // Prevents duplicate popups for the same orphanage
+                                });
+                                criticalNeedSound.play().catch(e => console.warn("Sound blocked until user interaction"));
+                                notifiedOrphanages.add(o.id);
+                            } else if (!o.hasUrgentNeed) {
+                                notifiedOrphanages.delete(o.id); // Reset so they get notified if a new urgent need arises later
+                            }
+                        });
+                    }
+
+                    applyNearbySort();
+                } catch (e) { 
+                    list.innerHTML = `<p class="col-span-full text-center text-red-500 py-4 italic text-xs">Error: ${e.message}</p>`;
+                }
+            }, (err) => {
+                alert("Access to location denied.");
+                list.innerHTML = '<p class="col-span-full text-center text-stone-400 py-4 italic text-xs">Location access is required for this feature.</p>';
+            });
+        }
+
+        function applyNearbySort() {
+            const sortType = document.getElementById('nearbySort').value;
+            const queryRaw = document.getElementById('nearbySearch').value;
+            const searchQuery = queryRaw.toLowerCase();
+            
+            let processed = [...cachedNearbyOrphanages];
+
+            // Filter by search query
+            if (searchQuery) {
+                processed = processed.filter(o => 
+                    (o.name && o.name.toLowerCase().includes(searchQuery)) || 
+                    (o.location && o.location.toLowerCase().includes(searchQuery))
+                );
+            }
+
+            if (sortType === 'urgent') {
+                // Sort by hasUrgentNeed (desc) then pendingRequests (desc) then distance (asc)
+                processed.sort((a, b) => {
+                    if (b.hasUrgentNeed !== a.hasUrgentNeed) {
+                        return b.hasUrgentNeed - a.hasUrgentNeed;
+                    }
+                    if (b.pendingRequests !== a.pendingRequests) {
+                        return b.pendingRequests - a.pendingRequests;
+                    }
+                    return a.distance - b.distance;
+                });
+            } else {
+                // Default: distance (asc)
+                processed.sort((a, b) => a.distance - b.distance);
+            }
+            renderNearbyOrphanages(processed, queryRaw);
+        }
+
+        function highlightText(text, query) {
+            if (!query || !text) return text;
+            const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const regex = new RegExp(`(${escapedQuery})`, 'gi');
+            return text.replace(regex, '<span class="search-highlight">$1</span>');
+        }
+
+        function renderNearbyOrphanages(orphanages, query = '') {
+            const list = document.getElementById('nearbyList');
+            if (orphanages.length === 0) {
+                list.innerHTML = '<p class="col-span-full text-center text-stone-400 py-4 italic text-xs">No homes found with location data nearby.</p>';
+                return;
+            }
+
+            const { lat: latitude, lon: longitude } = userCoords;
+            const mapDiv = document.getElementById('nearbyMap');
+            mapDiv.classList.remove('hidden');
+            
+            if (!nearbyMap) {
+                nearbyMap = L.map('nearbyMap').setView([latitude, longitude], 13);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap contributors'
+                }).addTo(nearbyMap);
+                markersLayer = L.layerGroup().addTo(nearbyMap);
+            } else {
+                nearbyMap.setView([latitude, longitude], 13);
+                markersLayer.clearLayers();
+            }
+
+            L.circleMarker([latitude, longitude], { radius: 8, color: '#3B82F6', fillOpacity: 0.8 }).addTo(markersLayer).bindPopup("Your Location");
+            
+            // Custom red icon for urgent needs
+            const urgentIcon = L.icon({
+                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                iconSize: [25, 41],
+                iconAnchor: [12, 41],
+                popupAnchor: [1, -34],
+                shadowSize: [41, 41]
+            });
+
+            list.innerHTML = orphanages.map(o => `
+                <div class="p-4 border border-stone-100 bg-stone-50 rounded-xl hover:shadow-md transition">
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-[#A34A38] text-white rounded-full flex items-center justify-center text-sm font-bold shrink-0 overflow-hidden">
+                            ${o.profileImage ? `<img src="${o.profileImage}" class="w-full h-full object-cover">` : `<i class="fa-solid fa-building-ngo"></i>`}
+                        </div>
+                        <div class="truncate">
+                            <h4 class="font-bold text-stone-800 text-sm truncate">${highlightText(o.name, query)}</h4>
+                            <p class="text-[10px] text-stone-400 font-medium">${highlightText(o.location || 'Local Area', query)}</p>
+                        </div>
+                        </div>
+                                <div class="flex flex-col items-end space-y-1">
+                                    ${o.hasUrgentNeed ? `<span class="bg-red-600 text-white text-[8px] font-bold px-2 py-0.5 rounded-full uppercase animate-pulse shadow-sm"><i class="fa-solid fa-fire mr-1"></i>Critical Need</span>` : ''}
+                                    ${o.pendingRequests > 0 && !o.hasUrgentNeed ? `<span class="bg-amber-100 text-amber-700 text-[8px] font-bold px-2 py-0.5 rounded-full uppercase shrink-0">Has Needs</span>` : ''}
+                                </div>
+                    </div>
+                    <div class="mb-3">
+                        ${o.hasUrgentNeed ? `<p class="text-[11px] font-black text-stone-900 flex items-center"><i class="fa-solid fa-box-open mr-1.5 text-red-500"></i> Needs: ${o.urgentItemCategory}</p>` : `<p class="text-[11px] text-stone-400 font-medium italic">No specific urgent needs logged.</p>`}
+                    </div>
+                    <div class="flex justify-between items-center text-[10px]">
+                        <span class="text-emerald-600 font-bold"><i class="fa-solid fa-car mr-1"></i>${o.distance.toFixed(1)} km away</span>
+                        <span class="text-stone-400">${o.childrenCount || 0} Children</span>
+                    </div>
+                    <div class="mt-3 grid grid-cols-2 gap-2">
+                        <button onclick="initiateQuickPayment('${o.name.replace(/'/g, "\\'")}')" class="bg-emerald-600 text-white text-[10px] py-1.5 rounded-lg font-bold text-center hover:bg-emerald-700 transition">Donate ₹</button>
+                        ${o.hasUrgentNeed ? 
+                            `<button onclick="directContribute(${o.urgentRequestId}, ${o.remainingNumericQuantity}, '${o.urgentItemCategory.replace(/'/g, "\\'")}', '${o.unit}')" class="bg-red-600 text-white text-[10px] py-1.5 rounded-lg font-bold text-center hover:bg-red-700 transition shadow-sm animate-pulse">Accept Need</button>` : 
+                            `<button onclick="toggleFoodModal()" class="bg-orange-600 text-white text-[10px] py-1.5 rounded-lg font-bold text-center hover:bg-orange-700 transition">Share Food</button>`
+                        }
+                    </div>
+                </div>
+            `).join('');
+
+            orphanages.forEach(o => {
+                if (o.latitude && o.longitude) {
+                    const markerOptions = o.hasUrgentNeed ? { icon: urgentIcon } : {};
+                    const popupContent = `
+                        <div class="text-center">
+                            <b class="text-stone-800">${o.name}</b><br>
+                            ${o.hasUrgentNeed ? '<span class="text-[9px] font-bold bg-red-600 text-white px-2 py-0.5 rounded-full uppercase animate-pulse mb-1 inline-block">Urgent Need</span><br>' : ''}
+                            <span class="text-xs text-stone-500">${o.distance.toFixed(1)} km away</span><br>
+                            <a href="payment.html" class="text-[10px] text-blue-600 font-bold hover:underline">Donate Now</a>
+                        </div>
+                    `;
+                    L.marker([o.latitude, o.longitude], markerOptions)
+                        .addTo(markersLayer)
+                        .bindPopup(popupContent);
+                }
+            });
+            nearbyMap.invalidateSize();
+        }
+
+        async function fetchLiveLocation(event, targetId = 'foodAddress') {
+            const btn = event.currentTarget;
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i>Detecting...';
+
+            if (!navigator.geolocation) {
+                alert("Geolocation is not supported.");
+                btn.disabled = false; btn.innerHTML = originalText;
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(async (pos) => {
+                try {
+                    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`);
+                    const data = await res.json();
+                    document.getElementById(targetId).value = data.display_name || `${pos.coords.latitude}, ${pos.coords.longitude}`;
+                    
+                    const statusDiv = document.getElementById('liveLocationStatus');
+                    if (statusDiv && targetId === 'profAddress') {
+                        document.getElementById('profLat').value = pos.coords.latitude;
+                        document.getElementById('profLon').value = pos.coords.longitude;
+                        statusDiv.classList.remove('hidden');
+                        getPlaceName(pos.coords.latitude, pos.coords.longitude).then(name => {
+                            document.getElementById('currentCoords').innerText = name;
+                        });
+                    }
+                } catch (e) { alert("Detection failed."); }
+                finally { btn.disabled = false; btn.innerHTML = originalText; }
+            }, () => { alert("Access denied."); btn.disabled = false; btn.innerHTML = originalText; });
+        }
+
+        document.getElementById('foodForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('saveFoodBtn');
+            const errDiv = document.getElementById('foodError');
+            
+            const foodData = {
+                foodItem: document.getElementById('foodItem').value,
+                quantity: document.getElementById('foodQuantity').value,
+                servesCount: parseInt(document.getElementById('servesCount').value),
+                address: document.getElementById('foodAddress').value
+            };
+
+            btn.disabled = true; btn.innerText = 'Submitting...';
+            try {
+                const response = await fetch('/api/food/donate', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify(foodData)
+                });
+                if (response.ok) {
+                    showToast('Food donation shared!');
+                    toggleFoodModal();
+                    document.getElementById('foodForm').reset();
+                    loadSummary();
+                } else {
+                    const data = await response.json();
+                    errDiv.innerText = data.message || 'Error saving donation.';
+                    errDiv.classList.remove('hidden');
+                }
+            } catch (err) { errDiv.innerText = 'Network error.'; errDiv.classList.remove('hidden'); }
+            finally { btn.disabled = false; btn.innerText = 'Donate Now'; }
+        };
+
+        document.getElementById('profileForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('saveProfileBtn');
+            const errDiv = document.getElementById('profileError');
+
+            const formData = new FormData();
+            formData.append('username', document.getElementById('profUsername').value);
+            formData.append('displayName', document.getElementById('profDisplayName').value);
+            formData.append('contactNumber', document.getElementById('profContactNumber').value);
+            formData.append('address', document.getElementById('profAddress').value);
+            formData.append('bio', document.getElementById('profBio').value);
+            formData.append('latitude', document.getElementById('profLat').value || '');
+            formData.append('longitude', document.getElementById('profLon').value || '');
+            formData.append('locationEnabled', document.getElementById('profLocationEnabled').checked);
+
+            const password = document.getElementById('profPassword').value;
+            if (password) formData.append('password', password);
+
+            const imageFile = document.getElementById('profImage').files[0];
+            if (imageFile) formData.append('profileImage', imageFile);
+
+            btn.disabled = true;
+            btn.innerText = 'Saving...';
+            errDiv.classList.add('hidden');
+
+            try {
+                const response = await fetch('/api/donor/profile', {
+                    method: 'PUT',
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+                    body: formData
+                });
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showToast('Profile updated successfully!');
+                    toggleProfileModal();
+                    loadSummary(); // Refresh dashboard data
+                } else {
+                    errDiv.innerText = data.message || 'Failed to update profile.';
+                    errDiv.classList.remove('hidden');
+                }
+            } catch (err) {
+                console.error(err);
+                errDiv.innerText = 'Connection error. Please try again.';
+                errDiv.classList.remove('hidden');
+            } finally {
+                btn.disabled = false;
+                btn.innerText = 'Save Changes';
+            }
+        };
+
+        async function updatePresence(isOnline) {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+            try {
+                await fetch('/api/user/presence', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ status: isOnline ? 1 : 0 }),
+                    keepalive: true
+                });
+            } catch (e) {}
+        }
+
+        function logout() { 
+            updatePresence(false);
+            localStorage.clear(); 
+            window.location.href = 'index.html'; 
+        }
+        
+        // Initial Setup
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSummary();
+            // Request notification permission if not already granted
+            if ("Notification" in window && Notification.permission === "default") {
+                Notification.requestPermission();
+            }
+            // Automated background check for nearby critical needs
+            setInterval(() => { if (userCoords) fetchNearbyOrphanages(); }, 30000);
+            
+            // Global urgent needs check for all donors (Regardless of location)
+            setInterval(checkGlobalUrgentNeeds, 45000);
+
+            // Check settings and sync location
+            fetch('/api/user/settings', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.locationEnabled === 1) {
+                        autoLocationSync();
+                        setInterval(autoLocationSync, 60000); // Automatic update while traveling
+                    }
+                });
+
+            // Presence tracking
+            updatePresence(true);
+            document.addEventListener('visibilitychange', () => updatePresence(document.visibilityState === 'visible'));
+            window.addEventListener('beforeunload', () => updatePresence(false));
+        });
+
+        // Auto-refresh summary every 10 seconds for real-time payment status updates
+        setInterval(loadSummary, 10000);
+    </script>
+</body>
+</html>

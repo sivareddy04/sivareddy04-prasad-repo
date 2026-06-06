@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Urgent Needs Map - Mana Vivekam</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+    <style>
+        body { background-color: #FAF6F0; font-family: 'Plus Jakarta Sans', sans-serif; }
+        #fullMap { height: 100%; width: 100%; }
+        .side-panel { height: calc(100vh - 64px); transition: transform 0.3s ease-in-out; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #dc2626; border-radius: 10px; }
+    </style>
+</head>
+<body class="text-stone-800">
+    <!-- Notification Toast -->
+    <div id="urgentToast" class="fixed top-20 right-6 z-[2000] transform translate-x-full transition-transform duration-500 pointer-events-none">
+        <div class="bg-red-600 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center space-x-4 border-2 border-white/20">
+            <div class="bg-white/20 p-2 rounded-full"><i class="fa-solid fa-truck-medical animate-bounce"></i></div>
+            <div><p class="text-xs font-bold uppercase tracking-wider">New Urgent Need!</p><p id="toastMessage" class="text-sm">A home needs your help.</p></div>
+        </div>
+    </div>
+
+    <header class="bg-red-700 text-white h-16 px-6 flex justify-between items-center shadow-lg z-50 relative">
+        <div class="flex items-center space-x-4">
+            <a href="donor-dashboard.html" class="hover:text-red-200 transition"><i class="fa-solid fa-arrow-left"></i></a>
+            <h1 class="text-lg font-bold flex items-center">
+                <i class="fa-solid fa-truck-medical mr-2"></i> State-wide Critical Needs Map <span id="urgentOrphanageCount" class="ml-2 opacity-80 font-normal"></span>
+            </h1>
+        </div>
+        <div class="flex items-center space-x-3">
+            <button onclick="shareMapOnWhatsApp()" class="text-xs bg-[#25D366] text-white px-3 py-1.5 rounded-lg font-bold hover:opacity-90 transition flex items-center shadow-sm">
+                <i class="fa-brands fa-whatsapp mr-1 text-sm"></i> Share Map
+            </button>
+            <a href="https://chat.whatsapp.com/ManaVivekamVolunteers" target="_blank" class="text-xs bg-emerald-600 text-white px-3 py-1.5 rounded-lg font-bold hover:bg-emerald-700 transition flex items-center">
+                <i class="fa-solid fa-users mr-1"></i> Group
+            </a>
+            <button onclick="toggleSidePanel()" class="md:hidden text-xs bg-white/20 px-3 py-1.5 rounded-lg font-bold">
+                <i class="fa-solid fa-list mr-1"></i> List
+            </button>
+            <select id="categoryFilter" onchange="loadUrgentData()" class="text-xs bg-red-800 text-white border border-red-600 rounded-lg px-2 py-1.5 focus:outline-none font-semibold">
+                <option value="all">All Needs</option>
+                <option value="food">Food & Groceries</option>
+                <option value="medical">Medical & Health</option>
+                <option value="other">Other (Clothing/Shelter)</option>
+            </select>
+            <span class="text-[10px] font-bold bg-white/20 px-2 py-1 rounded-full uppercase tracking-wider">Live Updates</span>
+            <button onclick="loadUrgentData()" class="text-xs bg-white text-red-700 px-3 py-1.5 rounded-lg font-bold hover:bg-stone-100 transition">
+                <i class="fa-solid fa-sync mr-1"></i> Refresh
+            </button>
+        </div>
+    </header>
+
+    <main class="flex overflow-hidden">
+        <!-- Side Data Table Panel -->
+        <div id="sidePanel" class="side-panel w-80 bg-white border-l border-stone-200 overflow-y-auto hidden md:block z-40 fixed md:relative right-0 custom-scrollbar">
+            <div class="p-4 border-b border-stone-100 bg-red-50 sticky top-0 z-10">
+                <div class="flex justify-between items-center mb-1">
+                    <h2 class="font-bold text-red-800 text-sm flex items-center">
+                        <i class="fa-solid fa-bullhorn mr-2"></i> Verified Urgent Needs
+                    </h2>
+                    <span class="text-[10px] text-stone-400 font-mono">Live Feed</span>
+                </div>
+                <p class="text-[10px] text-red-600/70 italic leading-tight font-medium">Approved requests appear here in real-time.</p>
+            </div>
+            <div id="urgentNeedsList" class="p-2 space-y-2">
+                <!-- List items will be injected here -->
+            </div>
+        </div>
+
+        <div id="fullMap" class="flex-1 relative"></div>
+        
+        <!-- Legend Overlay -->
+        <div class="absolute bottom-10 left-6 z-[1000] bg-white/90 backdrop-blur-md p-4 rounded-2xl shadow-2xl border border-red-100 max-w-xs">
+            <h3 class="font-bold text-stone-800 text-sm mb-3">Map Legend</h3>
+            <div class="space-y-2">
+                <div class="flex items-center text-xs">
+                    <img src="https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png" class="h-5 mr-2">
+                    <span class="text-stone-600">General Urgent Need</span>
+                </div>
+                <div class="flex items-center text-xs">
+                    <img src="https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png" class="h-5 mr-2">
+                    <span class="text-stone-600">Urgent <b>Food/Groceries</b> Need</span>
+                </div>
+                <div class="flex items-center text-xs">
+                    <img src="https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png" class="h-5 mr-2">
+                    <span class="text-stone-600">Urgent <b>Medical/Health</b> Need</span>
+                </div>
+                <div class="flex items-center text-xs">
+                    <img src="https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-orange.png" class="h-5 mr-2">
+                    <span class="text-stone-600">Urgent <b>Other</b> Needs (e.g., blankets)</span>
+                </div>
+                <p class="text-[10px] text-stone-400 mt-2 leading-relaxed">This map shows only verified orphanages that have flagged a critical shortage of food, medicine, or essentials.</p>
+                <div class="mt-4 pt-3 border-t border-red-50">
+                    <a href="https://chat.whatsapp.com/ManaVivekamVolunteers" target="_blank" class="block w-full bg-emerald-50 text-emerald-700 text-center py-2 rounded-xl text-[10px] font-bold border border-emerald-100">
+                        <i class="fa-brands fa-whatsapp mr-1 text-xs"></i> Join WhatsApp Group
+                    </a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let map;
+        let markersLayer;
+        let knownUrgentIds = new Set();
+        let isInitialLoad = true;
+        const criticalNeedSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+
+        const stateCenter = [15.9129, 79.7400]; // Andhra Pradesh Center
+
+        // Define different colored icons
+        const redIcon = L.icon({
+            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+        });
+        const greenIcon = L.icon({
+            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+        });
+        const blueIcon = L.icon({
+            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+        });
+        const orangeIcon = L.icon({
+            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-orange.png',
+            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+        });
+
+        function shareMapOnWhatsApp() {
+            const text = encodeURIComponent("🚨 URGENT: Multiple orphanages in the state have critical needs! Check the live map and donate: " + window.location.href);
+            window.open(`https://wa.me/?text=${text}`, '_blank');
+        }
+
+        function shareOrphanageNeed(name, location, item) {
+            const text = encodeURIComponent(`🆘 URGENT NEED!\n*${name}* in *${location}* needs *${item}* immediately.\n\nPlease help or share this alert. You can donate here: ${window.location.origin}/payment.html`);
+            window.open(`https://wa.me/?text=${text}`, '_blank');
+        }
+
+        function toggleSidePanel() {
+            const panel = document.getElementById('sidePanel');
+            panel.classList.toggle('hidden');
+            if (!panel.classList.contains('hidden')) {
+                panel.classList.add('fixed', 'inset-y-16', 'right-0');
+            }
+        }
+
+        async function acceptRequest(requestId, remaining) {
+            const amount = prompt(`CONFIRM CONTRIBUTION: This home needs ${remaining}.\n\nHow much can you provide? Your LIVE LOCATION will be used for agent pickup.`, remaining);
+            if (!amount || isNaN(amount)) return;
+
+            try {
+                // Detect location for the pickup agent
+                let lat = null, lon = null, addr = null;
+                if (navigator.geolocation) {
+                    const pos = await new Promise((res) => navigator.geolocation.getCurrentPosition(res, () => res(null)));
+                    if (pos) {
+                        lat = pos.coords.latitude;
+                        lon = pos.coords.longitude;
+                        try {
+                            const geo = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`).then(r => r.json());
+                            addr = geo.display_name;
+                        } catch (e) {}
+                    }
+                }
+
+                const res = await fetch(`/api/donor/requests/${requestId}/contribute`, {
+                    method: 'POST',
+                    headers: { 
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        amount,
+                        latitude: lat,
+                        longitude: lon,
+                        donorAddress: addr
+                    })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    showUrgentNotification("System", data.message);
+                    loadUrgentData();
+                } else {
+                    alert(data.message || "Failed to accept request.");
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        function showUrgentNotification(name, item) {
+            const toast = document.getElementById('urgentToast');
+            const msg = document.getElementById('toastMessage');
+            const message = `${name} urgently needs ${item}`;
+            msg.innerText = message;
+            
+            toast.classList.remove('translate-x-full');
+            criticalNeedSound.play().catch(e => {});
+
+            // Real Browser Notification for Background Alerts
+            if ("Notification" in window && Notification.permission === "granted") {
+                new Notification("🆘 URGENT NEED ALERT", {
+                    body: message,
+                    icon: "https://cdn-icons-png.flaticon.com/512/862/862856.png"
+                });
+            }
+            
+            setTimeout(() => {
+                toast.classList.add('translate-x-full');
+            }, 5000);
+        }
+
+        function focusOnHome(lat, lon, id) {
+            map.setView([lat, lon], 14);
+            markersLayer.eachLayer(marker => { if(marker.options.id === id) marker.openPopup(); });
+        }
+
+        async function loadUrgentData() {
+            const token = localStorage.getItem('token');
+            if (!token) return window.location.href = 'login.html';
+
+            const filterType = document.getElementById('categoryFilter').value;
+
+            try {
+                // Using the dedicated global map data endpoint
+                const res = await fetch(`/api/donor/urgent-map-data`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                let orphanages = await res.json();
+
+                // Client-side filtering based on keywords
+                if (filterType !== 'all') {
+                    orphanages = orphanages.filter(o => {
+                        const cat = o.urgentItemCategory ? o.urgentItemCategory.toLowerCase() : '';
+                        if (filterType === 'food') {
+                            return cat.includes('food') || cat.includes('rice') || cat.includes('groceries') || cat.includes('meal') || cat.includes('milk');
+                        } else if (filterType === 'medical') {
+                            return cat.includes('medical') || cat.includes('medicine') || cat.includes('health');
+                        } else if (filterType === 'other') {
+                            return cat.includes('blanket') || cat.includes('clothing') || cat.includes('shelter');
+                        }
+                        return false;
+                    });
+                }
+
+                markersLayer.clearLayers();
+                const listContainer = document.getElementById('urgentNeedsList');
+                listContainer.innerHTML = '';
+
+                let newFound = false;
+
+                orphanages.forEach(o => {
+                    if (o.latitude !== null && o.longitude !== null) {
+                        const fulfillmentPercentage = o.numericQuantity > 0 
+                            ? Math.min(100, Math.max(0, ((o.numericQuantity - o.remainingNumericQuantity) / o.numericQuantity) * 100))
+                            : 0;
+
+                        // Notification Logic
+                        if (!isInitialLoad && !knownUrgentIds.has(o.urgentRequestId)) {
+                            showUrgentNotification(o.name, o.urgentItemCategory);
+                            newFound = true;
+                        }
+
+                        let currentMarkerIcon = redIcon; // Default to red for general urgent
+                        const urgentCategory = o.urgentItemCategory ? o.urgentItemCategory.toLowerCase() : '';
+
+                        if (urgentCategory.includes('food') || urgentCategory.includes('rice') || urgentCategory.includes('groceries') || urgentCategory.includes('meal') || urgentCategory.includes('milk')) {
+                            currentMarkerIcon = greenIcon;
+                        } else if (urgentCategory.includes('medical') || urgentCategory.includes('medicine') || urgentCategory.includes('health')) {
+                            currentMarkerIcon = blueIcon;
+                        } else if (urgentCategory.includes('blanket') || urgentCategory.includes('clothing') || urgentCategory.includes('shelter')) {
+                            currentMarkerIcon = orangeIcon;
+                        }
+
+                        // Add to Side List
+                        listContainer.innerHTML += `
+                            <div class="p-3 bg-white border border-stone-100 rounded-xl hover:border-red-300 hover:shadow-md transition cursor-pointer group" onclick="focusOnHome(${o.latitude}, ${o.longitude}, ${o.orphanageId})">
+                                <div class="flex justify-between items-start mb-1">
+                                    <h4 class="font-bold text-stone-800 text-xs truncate group-hover:text-red-700">${o.name}</h4>
+                                    <button onclick="event.stopPropagation(); acceptRequest(${o.urgentRequestId}, '${o.remainingNumericQuantity} ${o.unit}')" class="text-[8px] font-bold text-white bg-emerald-600 px-2 py-1 rounded shadow-sm hover:bg-emerald-700 transition">HELP</button>
+                                </div>
+                                <p class="text-[10px] text-red-600 font-bold mb-1 flex items-center">
+                                    <i class="fa-solid fa-box-open mr-1 opacity-70"></i>${o.urgentItemCategory}
+                                </p>
+                                <div class="w-full bg-stone-100 h-1 rounded-full overflow-hidden mt-1 mb-2">
+                                    <div class="bg-red-600 h-full transition-all duration-1000" style="width: ${fulfillmentPercentage}%"></div>
+                                </div>
+                                <div class="flex justify-between items-center text-[10px] text-stone-500 mb-2">
+                                    <span class="truncate max-w-[120px]"><i class="fa-solid fa-location-dot mr-1 text-stone-300"></i>${o.location || 'Local'}</span>
+                                    <span class="text-red-600 font-bold">Qty: ${o.remainingNumericQuantity || 0} ${o.unit || ''}</span>
+                                </div>
+                                <div class="flex justify-between items-center text-[8px] text-stone-300 border-t border-stone-50 pt-1.5">
+                                    <span><i class="fa-solid fa-clock mr-1"></i>${new Date(o.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} Today</span>
+                                    <span class="font-bold text-blue-400">TAP TO VIEW <i class="fa-solid fa-arrow-right ml-1"></i></span>
+                                </div>
+                            </div>
+                        `;
+
+                        const popupContent = `
+                            <div class="text-center p-1">
+                                <div class="mb-2">
+                                    <b class="text-stone-800 text-sm">${o.name}</b><br>
+                                    <span class="text-[8px] font-bold bg-red-600 text-white px-2 py-0.5 rounded-full uppercase animate-pulse">Urgent Need</span>
+                                </div>
+                                <div class="text-left bg-stone-50 p-2 rounded-lg border border-stone-100 mb-2">
+                                    <p class="text-[11px] font-bold text-stone-700"><i class="fa-solid fa-box-open mr-1"></i>${o.urgentItemCategory || 'Resources'}</p>
+                                    <p class="text-[10px] text-stone-500"><b>Total Needed:</b> ${o.numericQuantity} ${o.unit}</p>
+                                    <div class="w-full bg-stone-200 h-1 rounded-full overflow-hidden my-1">
+                                        <div class="bg-red-600 h-full" style="width: ${fulfillmentPercentage}%"></div>
+                                    </div>
+                                    <p class="text-[9px] font-bold text-red-600">${o.remainingNumericQuantity || 0} ${o.unit || ''} Still Required</p>
+                                    <p class="text-[10px] text-stone-400 italic line-clamp-2 mt-1">"${o.urgentItemDesc || ''}"</p>
+                                </div>
+                                <p class="text-[10px] text-stone-400 mb-2"><i class="fa-solid fa-location-dot mr-1"></i>${o.location || 'Local Area'}</p>
+                                <div class="flex flex-col gap-2 mt-2">
+                                    <button onclick="acceptRequest(${o.urgentRequestId}, '${o.remainingNumericQuantity} ${o.unit}')" class="w-full bg-emerald-600 text-white text-[10px] py-2 rounded-lg font-bold hover:bg-emerald-700 transition shadow-md">
+                                        <i class="fa-solid fa-handshake mr-1"></i> Accept This Need (Reply)
+                                    </button>
+                                    <div class="flex gap-2">
+                                        <a href="payment.html" class="flex-1 bg-stone-800 text-white text-[10px] py-1.5 rounded-lg font-bold hover:bg-black transition text-center flex items-center justify-center"><i class="fa-solid fa-credit-card mr-1"></i> Payment</a>
+                                    <button onclick="shareOrphanageNeed('${o.name.replace(/'/g, "\\'")}', '${(o.location || 'Local Area').replace(/'/g, "\\'")}', '${(o.urgentItemCategory || 'Resources').replace(/'/g, "\\'")}')" class="bg-[#25D366] text-white text-[10px] px-3 py-1.5 rounded-lg font-bold hover:opacity-90 transition">
+                                        <i class="fa-brands fa-whatsapp"></i>
+                                    </button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        const marker = L.marker([o.latitude, o.longitude], { icon: currentMarkerIcon, id: o.orphanageId })
+                            .addTo(markersLayer)
+                            .bindPopup(popupContent);
+                    }
+                });
+
+                // Update memory for notifications
+                knownUrgentIds = new Set(orphanages.map(o => o.urgentRequestId));
+                isInitialLoad = false;
+
+                if (orphanages.length > 0) {
+                    const group = new L.featureGroup(markersLayer.getLayers());
+                    map.fitBounds(group.getBounds().pad(0.1));
+                    document.getElementById('urgentOrphanageCount').innerText = `(${orphanages.length} Orphanages)`;
+                } else {
+                    document.getElementById('urgentOrphanageCount').innerText = `(No Urgent Needs)`;
+                }
+            } catch (e) { console.error("Map Load Error", e); }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            map = L.map('fullMap').setView(stateCenter, 7);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+            markersLayer = L.markerClusterGroup({
+                showCoverageOnHover: false,
+                zoomToBoundsOnClick: true,
+                spiderfyOnMaxZoom: true
+            }).addTo(map);
+
+            loadUrgentData();
+            
+            // Refresh every 30 seconds for live monitoring
+            setInterval(loadUrgentData, 30000);
+        });
+    </script>
+</body>
+</html>

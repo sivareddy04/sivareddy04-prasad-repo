@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Agent Dashboard - Mana Vivekam</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>body { background-color: #F0F4FA; font-family: 'Plus Jakarta Sans', sans-serif; }</style>
+</head>
+<body class="text-stone-800">
+    <header class="bg-blue-900 text-white py-4 px-6 flex justify-between items-center shadow-lg">
+        <h1 class="text-xl font-bold flex items-center">
+            <i class="fa-solid fa-truck-pickup mr-2 text-blue-300"></i>
+            Agent Field Portal
+            <span id="verifiedBadge" class="hidden ml-3 bg-emerald-500 text-white text-[9px] px-2.5 py-1 rounded-full flex items-center shadow-lg shadow-emerald-900/20 animate-pulse border border-emerald-400">
+                <i class="fa-solid fa-certificate mr-1.5 text-[10px]"></i> VERIFIED AGENT
+            </span>
+        </h1>
+        <div class="flex items-center space-x-4">
+            <button onclick="refreshData()" class="text-sm bg-blue-800 px-4 py-2 rounded-lg hover:bg-blue-700 transition"><i class="fa-solid fa-sync mr-2"></i>Refresh</button>
+            <button onclick="toggleSettingsModal()" class="text-sm bg-stone-700 px-4 py-2 rounded-lg hover:bg-stone-900 transition"><i class="fa-solid fa-cog mr-2"></i>Settings</button>
+            <button onclick="logout()" class="text-sm bg-stone-700 px-4 py-2 rounded-lg hover:bg-stone-900 transition">Logout</button>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto p-6 grid gap-8">
+        <!-- Stats Section -->
+        <div class="grid md:grid-cols-3 gap-6">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-blue-100">
+                <h3 class="text-stone-500 font-semibold mb-2">Active Pickups</h3>
+                <div id="activePickups" class="text-3xl font-bold text-blue-600">0</div>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-blue-100">
+                <h3 class="text-stone-500 font-semibold mb-2">Completed Today</h3>
+                <div id="completedPickups" class="text-3xl font-bold text-emerald-600">0</div>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-blue-100">
+                <h3 class="text-stone-500 font-semibold mb-2">Total Reports</h3>
+                <div id="totalReports" class="text-3xl font-bold text-[#A34A38]">0</div>
+            </div>
+        </div>
+
+        <div class="grid lg:grid-cols-2 gap-8">
+            <!-- Left Side: Operations -->
+            <div class="space-y-8">
+                <!-- My Active Tasks Section -->
+                <div class="bg-white p-8 rounded-2xl shadow-xl border border-blue-100">
+                    <h2 class="text-2xl font-bold mb-6 text-blue-900 flex items-center">
+                        <i class="fa-solid fa-route mr-3"></i>My Active Pickups
+                    </h2>
+                    <div id="myTasks" class="space-y-4">
+                        <p class="text-stone-500 italic">No active pickups assigned.</p>
+                    </div>
+                </div>
+
+                <!-- Available Food Donations Section -->
+                <div class="bg-white p-8 rounded-2xl shadow-xl border border-orange-100">
+                    <h2 class="text-2xl font-bold mb-6 text-orange-900 flex items-center">
+                        <i class="fa-solid fa-map-location-dot mr-3"></i>Available for Pickup
+                    </h2>
+                    <div id="foodList" class="space-y-4">
+                        <p class="text-stone-500 italic">No food currently available.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Side: Submission & History -->
+            <div class="space-y-8">
+                <div class="bg-white p-8 rounded-2xl shadow-xl border border-blue-100 sticky top-6">
+                    <h2 class="text-2xl font-bold mb-6 text-blue-900 flex items-center">
+                        <i class="fa-solid fa-camera mr-3"></i>Submit Audit Report
+                    </h2>
+                    <form id="uploadForm" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-bold mb-2">Location/Title</label>
+                            <input type="text" id="title" required placeholder="e.g. Guntur Orphanage Kitchen" class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold mb-2">Audit Notes</label>
+                            <textarea id="description" required placeholder="Describe current status..." class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500 h-32"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold mb-2">Field Image</label>
+                            <input type="file" id="image" required accept="image/*" class="w-full text-sm text-stone-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                        </div>
+                        <button type="submit" class="w-full bg-blue-600 text-white font-bold py-4 rounded-xl hover:bg-blue-700 transition shadow-lg">
+                            Submit Verification
+                        </button>
+                    </form>
+                </div>
+
+                <!-- My Reports History -->
+                <div class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
+                    <div class="p-6 border-b border-stone-100"><h2 class="font-bold text-lg text-blue-900">Recent Reports</h2></div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm border-collapse">
+                            <thead class="bg-stone-50 text-stone-500">
+                                <tr>
+                                    <th class="p-4">Title</th>
+                                    <th class="p-4">Status</th>
+                                    <th class="p-4">Date</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reportsTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="fixed inset-0 bg-stone-900/50 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-3xl w-full max-w-md p-8 shadow-2xl">
+            <h2 class="text-2xl font-bold text-stone-800 mb-6">Settings</h2>
+            <div class="space-y-6">
+                <div class="flex items-center justify-between p-4 bg-stone-50 rounded-2xl border border-stone-100">
+                    <div>
+                        <p class="font-bold text-stone-800">Location Tracking</p>
+                        <p class="text-xs text-stone-500">Allow tracking for assigned pickups.</p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="settingLocEnabled" class="sr-only peer" onchange="updateLocationSetting(this.checked)">
+                        <div class="w-11 h-6 bg-stone-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
+                </div>
+                <button onclick="toggleSettingsModal()" class="w-full py-3 text-stone-500 font-bold hover:bg-stone-50 rounded-xl transition">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let knownDonationIds = new Set();
+        const notificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+        let watchId = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('token');
+            const role = localStorage.getItem('role');
+            if (!token || role !== 'agent') {
+                window.location.href = 'login.html';
+                return;
+            }
+            refreshData();
+            startLocationWatch();
+        });
+
+        function startLocationWatch() {
+            if (navigator.geolocation) {
+                watchId = navigator.geolocation.watchPosition(async (pos) => {
+                    const { latitude, longitude } = pos.coords;
+                    await fetch('/api/user/location', {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json', 
+                            'Authorization': `Bearer ${localStorage.getItem('token')}` 
+                        },
+                        body: JSON.stringify({ latitude, longitude })
+                    });
+                }, null, { enableHighAccuracy: true });
+            }
+        }
+
+        function refreshData() {
+            loadStats();
+            loadFoodDonations();
+            loadMyTasks();
+            loadMyReports();
+        }
+
+        async function loadStats() {
+            try {
+                const res = await fetch('/api/agent/stats', {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+                const stats = await res.json();
+                document.getElementById('activePickups').innerText = stats.activePickups || 0;
+                document.getElementById('completedPickups').innerText = stats.completedPickups || 0;
+                document.getElementById('totalReports').innerText = stats.totalReports || 0;
+
+                const badge = document.getElementById('verifiedBadge');
+                if (stats.isVerified) {
+                    badge.classList.remove('hidden');
+                    badge.classList.add('flex');
+                } else {
+                    badge.classList.add('hidden');
+                    badge.classList.remove('flex');
+                }
+            } catch (err) { console.error(err); }
+        }
+
+        async function loadFoodDonations() {
+            try {
+                // Get current location to fetch nearest tasks
+                const pos = await new Promise((res) => navigator.geolocation.getCurrentPosition(res, () => res(null)));
+                let url = '/api/food/donations';
+                if (pos) {
+                    url += `?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`;
+                }
+
+                const response = await fetch(url, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+                if (!response.ok) {
+                    document.getElementById('foodList').innerHTML = '<p class="text-red-500">Failed to load donations.</p>';
+                    return;
+                }
+                
+                const donations = await response.json();
+
+                let hasNew = false;
+                const currentIds = new Set();
+                (donations || []).forEach(d => {
+                    currentIds.add(d.id);
+                    if (!knownDonationIds.has(d.id)) {
+                        hasNew = true;
+                    }
+                });
+
+                // Only play sound if this isn't the first time loading data and new items are found
+                if (hasNew && knownDonationIds.size > 0) {
+                    notificationSound.play().catch(e => console.log("Sound blocked by browser until user interaction."));
+                }
+                knownDonationIds = currentIds;
+
+                const list = document.getElementById('foodList');
+
+                list.innerHTML = (donations || []).map(d => `
+                    <div class="p-4 border rounded-xl bg-orange-50 border-orange-100 shadow-sm hover:border-orange-300 transition">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h4 class="font-bold text-orange-900">${d.foodItem}</h4>
+                                <p class="text-xs text-stone-600">Qty: ${d.quantity}</p>
+                                <p class="text-xs text-stone-500 mt-1"><i class="fa-solid fa-location-dot mr-1"></i>${d.address}</p>
+                            </div>
+                            <button onclick="claimDonation(${d.id})" class="bg-orange-600 text-white text-xs px-4 py-2 rounded-lg font-bold hover:bg-orange-700 transition shadow-sm">Claim</button>
+                        </div>
+                    </div>
+                `).join('') || '<p class="text-stone-500 italic">No food currently available.</p>';
+            } catch (err) { console.error(err); }
+        }
+
+        async function loadMyTasks() {
+            try {
+                const response = await fetch('/api/agent/tasks', {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+                if (!response.ok) {
+                    document.getElementById('myTasks').innerHTML = '<p class="text-red-500">Failed to load tasks.</p>';
+                    return;
+                }
+                
+                const tasks = await response.json();
+                const list = document.getElementById('myTasks');
+
+                list.innerHTML = (tasks || []).map(t => {
+                    const isReached = t.status === 'reached' || t.status === 'at_agent' || t.status === 'delivering';
+                    const hasFood = t.status === 'at_agent' || t.status === 'delivering';
+                    const progress = isReached ? 'w-2/3' : 'w-1/3';
+                    return `
+                    <div class="p-5 border-2 rounded-2xl ${isReached ? 'border-emerald-200 bg-white' : 'border-blue-200 bg-white'} shadow-md overflow-hidden relative group">
+                        <div class="absolute top-0 left-0 h-1 bg-stone-100 w-full">
+                            <div class="${isReached ? 'bg-emerald-500 ' + progress : 'bg-blue-500 ' + progress} h-full transition-all duration-700"></div>
+                        </div>
+                        <div class="flex justify-between items-start pt-2">
+                            <div class="flex-1">
+                                <div class="flex items-center space-x-2 mb-1">
+                                    <h4 class="font-black text-stone-900">${t.foodItem} (DELIVERY)</h4>
+                                    <span class="text-[8px] font-bold uppercase px-2 py-0.5 rounded-full ${isReached ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'}">${t.status}</span>
+                                </div>
+                                <div class="flex items-center space-x-2 mb-2">
+                                    <span class="text-[9px] font-black bg-stone-900 text-white px-2 py-0.5 rounded flex items-center">
+                                        <i class="fa-solid fa-location-arrow mr-1 text-[7px] animate-pulse"></i> SMART DISTANCE: <span class="ml-1" id="dist-${t.id}">Calculating...</span>
+                                    </span>
+                                </div>
+                                <p class="text-xs text-blue-600 font-bold mb-2"><i class="fa-solid fa-truck-ramp-box mr-1"></i>Carry: ${t.quantity}</p>
+                                ${t.stockRemaining !== null && t.stockRemaining > 0 ? `
+                                    <p class="text-[10px] text-red-600 font-black uppercase mb-2 bg-red-50 px-2 py-1 rounded-lg border border-red-100 w-fit">
+                                        <i class="fa-solid fa-boxes-stacked mr-1"></i> Still Required: ${t.stockRemaining} ${t.requestUnit || ''}
+                                    </p>
+                                ` : ''}
+                                <p class="text-xs text-stone-500 mb-4 flex items-start">
+                                    <i class="fa-solid fa-location-dot mr-2 mt-0.5 text-stone-400"></i>
+                                    <span class="line-clamp-2">${t.address}</span>
+                                </p>
+                                ${t.orphanageName ? `
+                                    <div class="mt-4 p-3 bg-emerald-50 rounded-xl border border-emerald-100">
+                                        <p class="text-[10px] font-black text-emerald-800 uppercase mb-1">Deliver To</p>
+                                        <h5 class="text-xs font-bold text-stone-900">${t.orphanageName}</h5>
+                                        <p class="text-[10px] text-stone-500">${t.orphanageAddress}</p>
+                                        <a href="tel:${t.orphanagePhone}" class="text-[10px] text-blue-600 font-bold mt-1 inline-block"><i class="fa-solid fa-phone mr-1"></i>${t.orphanagePhone}</a>
+                                        <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(t.orphanageAddress)}')" class="mt-3 w-full bg-white border border-emerald-200 text-emerald-700 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-50 transition shadow-sm">
+                                            <i class="fa-solid fa-location-arrow mr-1.5"></i> Open Navigation
+                                        </button>
+                                    </div>
+                                ` : (hasFood ? `
+                                    <div class="mt-4 p-3 bg-amber-50 rounded-xl border border-amber-100 animate-pulse">
+                                        <p class="text-[10px] font-black text-amber-800 uppercase">Awaiting Destination</p>
+                                        <p class="text-[9px] text-stone-500">Broadcasting your location to nearby orphanages...</p>
+                                    </div>
+                                ` : '')}
+                                <div class="flex items-center space-x-6 text-[10px] font-bold text-stone-400">
+                                    <span><i class="fa-solid fa-clock mr-1"></i>${new Date(t.createdAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
+                                    <span><i class="fa-solid fa-box-open mr-1"></i>${t.quantity}</span>
+                                </div>
+                            </div>
+                            ${t.status === 'claimed' ? 
+                                `<button onclick="reachPickup(${t.id})" class="bg-blue-600 text-white text-[10px] px-6 py-3 rounded-xl font-black uppercase tracking-widest hover:bg-blue-700 transition shadow-lg shadow-blue-600/20 active:scale-95">I've Reached</button>` :
+                                (t.status === 'reached' ? `<div class="flex flex-col items-end space-y-3">
+                                    <label class="cursor-pointer bg-white border border-emerald-200 text-emerald-700 px-3 py-1 rounded-lg text-[10px] hover:bg-emerald-50 transition shadow-sm">
+                                        <i class="fa-solid fa-camera mr-1"></i> <span id="label-${t.id}">Proof Photo</span>
+                                        <input type="file" id="deliveryImg-${t.id}" accept="image/*" class="hidden" 
+                                            onchange="if(this.files.length) { document.getElementById('label-${t.id}').innerText = 'Photo Added'; this.parentElement.classList.add('bg-emerald-100'); }">
+                                    </label>
+                                    <button onclick="completePickup(${t.id})" class="bg-blue-600 text-white text-[10px] px-6 py-3 rounded-xl font-black uppercase tracking-widest hover:bg-blue-700 transition shadow-lg shadow-blue-600/20 active:scale-95">Confirm Pickup</button>
+                                </div>` : 
+                                (t.status === 'delivering' ? `<button onclick="finishDelivery(${t.id})" class="bg-emerald-600 text-white text-[10px] px-6 py-3 rounded-xl font-black uppercase tracking-widest hover:bg-emerald-700 transition shadow-lg shadow-emerald-600/20 active:scale-95">Finish Delivery</button>` : `<span class="text-[9px] font-black text-stone-300 uppercase">Wait for Orpha</span>`))
+                            }
+                        </div>
+                    </div>
+                `}).join('') || '<p class="text-stone-500 italic">No active pickups assigned.</p>';
+            } catch (err) { console.error(err); }
+        }
+
+        async function loadMyReports() {
+            try {
+                const res = await fetch('/api/agent/my-reports', {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+                const reports = await res.json();
+                document.getElementById('reportsTable').innerHTML = (reports || []).map(r => `
+                    <tr class="border-b border-stone-50">
+                        <td class="p-4 font-medium text-stone-700">${r.title}</td>
+                        <td class="p-4"><span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase ${r.status==='approved'?'bg-emerald-100 text-emerald-700':'bg-amber-100 text-amber-700'}">${r.status}</span></td>
+                        <td class="p-4 text-xs text-stone-500">${new Date(r.createdAt).toLocaleDateString()}</td>
+                    </tr>
+                `).join('') || '<tr><td colspan="3" class="p-4 text-center text-stone-400">No reports submitted yet.</td></tr>';
+            } catch (err) { console.error(err); }
+        }
+
+        async function completePickup(id) {
+            const fileInput = document.getElementById(`deliveryImg-${id}`);
+            if (!fileInput || !fileInput.files[0]) {
+                alert('Pickup confirmation photo is required.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('image', fileInput.files[0]);
+
+            try {
+                const res = await fetch(`/api/food/pickup-complete/${id}`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+                    body: formData
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    alert(data.message || 'Pickup confirmed! Proceed to delivery.'); 
+                    refreshData(); 
+                } else { alert(data.message); }
+            } catch (err) { console.error(err); }
+        }
+
+        async function finishDelivery(id) {
+            if (!confirm("Confirm successful handover to orphanage?")) return;
+            try {
+                const res = await fetch(`/api/food/delivery-complete/${id}`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+                if (res.ok) { alert('Delivery Successful!'); refreshData(); }
+                else { alert('Handover failed.'); }
+            } catch (err) { console.error(err); }
+        }
+
+        async function reachPickup(id) {
+            try {
+                const res = await fetch(`/api/food/reach/${id}`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+                if (res.ok) { refreshData(); }
+            } catch (err) { console.error(err); }
+        }
+
+        async function claimDonation(id) {
+            try {
+                const response = await fetch(`/api/food/claim/${id}`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+                let data = {};
+                try { data = await response.json(); } catch(e) { console.error("Non-JSON response"); }
+
+                if (response.ok) { alert(data.message || 'Pickup claimed!'); refreshData(); }
+                else {
+                    const msg = response.status === 403 ? "Access Denied: Agent role required." : (data.message || data.error || 'Request failed.');
+                    alert('Claim Error: ' + msg);
+                }
+            } catch (err) { console.error(err); }
+        }
+
+        document.getElementById('uploadForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const formData = new FormData();
+            formData.append('title', document.getElementById('title').value);
+            formData.append('description', document.getElementById('description').value);
+            formData.append('image', document.getElementById('image').files[0]);
+
+            try {
+                const response = await fetch('/api/upload', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+                    body: formData
+                });
+                if (response.ok) {
+                    alert('Verification report submitted!');
+                    e.target.reset();
+                    refreshData();
+                } else { alert('Upload failed. Check permissions.'); }
+            } catch (err) { console.error(err); }
+        };
+
+        async function toggleSettingsModal() {
+            const modal = document.getElementById('settingsModal');
+            if (modal.classList.contains('hidden')) {
+                try {
+                    const res = await fetch('/api/user/settings', {
+                        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                    });
+                    const data = await res.json();
+                    document.getElementById('settingLocEnabled').checked = data.locationEnabled === 1;
+                } catch (e) { console.error(e); }
+            }
+            modal.classList.toggle('hidden');
+        }
+
+        async function updateLocationSetting(enabled) {
+            try {
+                await fetch('/api/user/settings', {
+                    method: 'PUT',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify({ locationEnabled: enabled })
+                });
+                alert(enabled ? 'Location enabled' : 'Location disabled');
+            } catch (e) { console.error(e); }
+        }
+
+        // Auto-refresh every 60 seconds
+        setInterval(refreshData, 60000);
+
+        // Explicitly bind functions to global window for HTML onclick reliability
+        window.claimDonation = claimDonation;
+        window.reachPickup = reachPickup;
+        window.completePickup = completePickup;
+        window.refreshData = refreshData;
+        window.logout = logout;
+
+        function logout() { localStorage.clear(); window.location.href = 'index.html'; }
+    </script>
+</body>
+</html>

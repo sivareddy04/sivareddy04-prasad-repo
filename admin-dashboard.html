@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard - Mana Vivekam</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background-color: #FAF6F0; font-family: 'Plus Jakarta Sans', sans-serif; }
+        .matrix-scroll::-webkit-scrollbar { height: 6px; }
+        .matrix-scroll::-webkit-scrollbar-thumb { background: #A34A38; border-radius: 10px; }
+    </style>
+</head>
+<body class="text-stone-800">
+    <!-- Notification Banner for New Registrations -->
+    <div id="newOrphanageBanner" class="bg-blue-600 text-white py-2.5 px-6 hidden items-center justify-between shadow-md sticky top-0 z-[60]">
+        <div class="flex items-center text-sm font-bold">
+            <i class="fa-solid fa-bell mr-2 animate-bounce"></i> New orphanage registration(s) pending review!
+        </div>
+        <button onclick="viewPendingOrphanages()" class="bg-white text-blue-600 text-[10px] px-3 py-1 rounded-full font-bold uppercase hover:bg-stone-100 transition shadow-sm">View Now</button>
+    </div>
+
+    <header class="bg-stone-900 text-white border-b border-stone-800 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 bg-amber-500 rounded-xl flex items-center justify-center text-stone-900 shadow-lg shadow-amber-500/20">
+                    <i class="fa-solid fa-shield-halved text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-black tracking-tight leading-none uppercase">Admin Central</h1>
+                    <p class="text-[9px] font-bold text-stone-500 tracking-[0.2em] uppercase mt-1">Foundation Command Board</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-4">
+                <div id="serverPulse" class="hidden md:flex items-center space-x-2 px-3 py-1.5 bg-stone-800 rounded-full border border-stone-700">
+                    <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.6)]"></span>
+                    <span class="text-[10px] font-black text-stone-300 uppercase tracking-widest">Server Live</span>
+                </div>
+                <div class="h-8 w-[1px] bg-stone-800 mx-2"></div>
+                <a href="admin-community-alerts.html" class="text-[10px] font-black uppercase tracking-widest text-stone-400 hover:text-red-500 transition">Alerts</a>
+                <button onclick="toggleSettingsModal()" class="text-[10px] font-black uppercase tracking-widest text-stone-400 hover:text-white transition">Config</button>
+                <button onclick="logout()" class="bg-stone-800 text-white text-[10px] font-black uppercase tracking-widest px-5 py-2.5 rounded-xl hover:bg-white hover:text-stone-900 transition shadow-lg active:scale-95 border border-stone-700">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto p-6 py-10 space-y-10">
+        <!-- Dashboard Stats Command Grid -->
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
+                <h3 class="text-stone-500 font-semibold mb-2 flex justify-between">Total Donations <i class="fa-solid fa-coins text-emerald-500"></i></h3>
+                <div id="totalDonations" class="text-3xl font-bold text-emerald-600">Loading...</div>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
+                <div class="flex justify-between items-start mb-2">
+                    <h3 class="text-stone-500 font-semibold">Active Users</h3>
+                    <div class="w-2 h-2 bg-emerald-500 rounded-full animate-ping"></div>
+                </div>
+                <div id="activeUsersCount" class="text-3xl font-bold text-stone-800">0</div>
+                <p class="text-[9px] font-bold text-stone-400 uppercase tracking-tighter mt-1">Live Identity Pulse</p>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
+                <h3 class="text-stone-500 font-semibold mb-2">Orphanage Requests</h3>
+                <div id="openRequests" class="text-3xl font-bold text-amber-600">Loading...</div>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
+                <h3 class="text-stone-500 font-semibold mb-2">Agent Reports</h3>
+                <div id="totalReports" class="text-3xl font-bold text-[#A34A38]">Loading...</div>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
+                <h3 class="text-stone-500 font-semibold mb-2">Public Alerts</h3>
+                <div id="totalAlerts" class="text-3xl font-bold text-red-600">Loading...</div>
+            </div>
+        </div>
+
+        <!-- System Health Monitor -->
+        <div class="bg-white rounded-[2.5rem] shadow-2xl shadow-stone-200/60 border border-stone-100 overflow-hidden">
+            <div class="bg-stone-900 p-8 flex justify-between items-center">
+                <div class="flex items-center space-x-4">
+                    <div class="w-12 h-12 bg-indigo-600 text-white rounded-2xl flex items-center justify-center text-xl shadow-lg shadow-indigo-900/40">
+                        <i class="fa-solid fa-microchip"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-white font-black text-xl tracking-tight leading-none uppercase">Live Server Performance</h2>
+                        <p class="text-[10px] text-stone-500 font-bold uppercase tracking-widest mt-1">Real-time Resource Monitoring</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <p class="text-[9px] font-black text-stone-500 uppercase tracking-widest">System Uptime</p>
+                    <p id="uptimeDisplay" class="text-xs font-bold text-white uppercase mt-1">Calculating...</p>
+                </div>
+            </div>
+            <div class="p-8 bg-stone-50/30" style="height: 280px;">
+                <canvas id="serverLoadChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Live Logistics Command Center (Concept Upgrade) -->
+        <div class="bg-white rounded-[2.5rem] shadow-2xl shadow-stone-200/60 border border-stone-100 overflow-hidden">
+            <div class="bg-stone-900 p-8 flex justify-between items-center">
+                <div class="flex items-center space-x-4">
+                    <div class="w-12 h-12 bg-blue-600 text-white rounded-2xl flex items-center justify-center text-xl shadow-lg shadow-blue-900/40">
+                        <i class="fa-solid fa-satellite-dish"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-white font-black text-xl tracking-tight leading-none uppercase">Field Operations Live</h2>
+                        <p class="text-[10px] text-stone-500 font-bold uppercase tracking-widest mt-1">Real-time Logistics Monitoring</p>
+                    </div>
+                </div>
+            </div>
+            <div id="logisticsMap" class="h-[400px] w-full bg-stone-100"></div>
+        </div>
+
+        <!-- Financial Logs (Donors) -->
+        <div class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden mb-6">
+            <div class="bg-emerald-700 p-4 px-6 flex justify-between items-center text-white cursor-pointer select-none" onclick="toggleSection(this)">
+                <h2 class="font-bold text-lg flex items-center">
+                    <i class="fa-solid fa-bars mr-3 text-emerald-200"></i> Financial Donations Log
+                </h2>
+                <i class="fa-solid fa-chevron-down transition-transform duration-300"></i>
+            </div>
+            <div>
+            <div class="p-4 border-b border-stone-50 bg-stone-50/30">
+                <div class="relative">
+                    <input type="text" id="foodSearch" onkeyup="filterFoodDonations()" placeholder="Search by item or address..." class="w-full bg-white pl-10 pr-4 py-2 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/30 transition text-sm">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-stone-400"></i>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-stone-50 text-stone-500 text-sm">
+                        <tr>
+                            <th class="p-4">Donor</th>
+                            <th class="p-4">Amount</th>
+                            <th class="p-4">Contact</th>
+                            <th class="p-4">Address</th>
+                            <th class="p-4">Status</th>
+                            <th class="p-4">Date</th>
+                            <th class="p-4">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="donationsTable"></tbody>
+                </table>
+            </div>
+            </div>
+        </div>
+
+        <!-- Orphanage Requests -->
+        <div class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden mb-6">
+            <div class="bg-amber-600 p-4 px-6 flex justify-between items-center text-white cursor-pointer select-none" onclick="toggleSection(this)">
+                <h2 class="font-bold text-lg flex items-center">
+                    <i class="fa-solid fa-bars mr-3 text-amber-200"></i> Needs & Requests (Orphanages)
+                </h2>
+                <i class="fa-solid fa-chevron-down transition-transform duration-300"></i>
+            </div>
+            <div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-stone-50 text-stone-500 text-sm">
+                        <tr>
+                            <th class="p-4">Orphanage</th>
+                            <th class="p-4">Item/Need</th>
+                            <th class="p-4">Qty</th>
+                            <th class="p-4">Location</th>
+                            <th class="p-4">Impact</th>
+                            <th class="p-4">Status</th>
+                            <th class="p-4">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="requestsTable"></tbody>
+                </table>
+            </div>
+            </div>
+        </div>
+
+        <!-- Public Community Alerts -->
+        <div class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden mb-6">
+            <div class="bg-red-700 p-4 px-6 flex justify-between items-center text-white cursor-pointer select-none" onclick="toggleSection(this)">
+                <h2 class="font-bold text-lg flex items-center">
+                    <i class="fa-solid fa-bars mr-3 text-red-200"></i> Public Community Alerts
+                </h2>
+                <div class="flex items-center space-x-4">
+                    <button onclick="event.stopPropagation(); seedCommunityAlerts()" class="text-xs bg-white/20 text-white px-3 py-1.5 rounded-lg hover:bg-white/30 transition border border-white/30 font-bold"><i class="fa-solid fa-seedling mr-2"></i>Seed Alerts</button>
+                    <i class="fa-solid fa-chevron-down transition-transform duration-300"></i>
+                </div>
+            </div>
+            <div>
+            <div class="p-4 border-b border-stone-50 bg-stone-50/30">
+                <div class="relative">
+                    <input type="text" id="alertsSearch" onkeyup="filterAlerts()" placeholder="Search alerts by ID, type, description, or contact..." class="w-full bg-white pl-10 pr-4 py-2 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500/30 transition text-sm">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-stone-400"></i>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-stone-50 text-stone-500 text-sm">
+                        <tr>
+                            <th class="p-4">ID</th>
+                            <th class="p-4">Type</th>
+                            <th class="p-4">Description</th>
+                            <th class="p-4">Contact</th>
+                            <th class="p-4">Photo</th>
+                            <th class="p-4">Date</th>
+                            <th class="p-4">Status</th>
+                            <th class="p-4">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="alertsTable"></tbody>
+                </table>
+            </div>
+            </div>
+        </div>
+
+        <div class="grid lg:grid-cols-12 gap-8">
+            <!-- Orphanage Comparison Matrix (Concept Upgrade) -->
+            <div class="lg:col-span-8 bg-white rounded-[2.5rem] shadow-2xl shadow-stone-200/60 border border-stone-100 overflow-hidden">
+                <div class="bg-stone-900 p-8 flex justify-between items-center">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-12 h-12 bg-amber-600 text-white rounded-2xl flex items-center justify-center text-xl shadow-lg shadow-amber-900/40">
+                            <i class="fa-solid fa-layer-group"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-white font-black text-xl tracking-tight leading-none uppercase">Orphanage Comparison Matrix</h2>
+                            <p class="text-[10px] text-stone-500 font-bold uppercase tracking-widest mt-1">Cross-Entity Resource Impact</p>
+                        </div>
+                    </div>
+                    <div class="bg-stone-800 px-4 py-2 rounded-xl border border-stone-700">
+                        <p id="orphaTotalCount" class="text-xs font-black text-white">0 Homes</p>
+                    </div>
+                </div>
+                <div class="p-0 matrix-scroll overflow-x-auto">
+                    <table class="w-full text-left border-collapse min-w-[700px]">
+                        <thead class="bg-stone-50 text-[10px] font-black text-stone-400 uppercase tracking-widest border-b border-stone-100">
+                            <tr>
+                                <th class="p-6">Orphanage Identity</th>
+                                <th class="p-6">Capacity</th>
+                                <th class="p-6">Pending Needs</th>
+                                <th class="p-6">Fulfilled</th>
+                                <th class="p-6">Efficiency</th>
+                                <th class="p-6 text-right">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="comparisonMatrixTable" class="divide-y divide-stone-50">
+                            <!-- Matrix content -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Global Activity Pulse (Intelligence Upgrade) -->
+            <div class="lg:col-span-4 bg-white rounded-[2.5rem] shadow-2xl shadow-stone-200/60 border border-stone-100 overflow-hidden">
+                <div class="bg-stone-900 p-8">
+                    <h2 class="text-white font-black text-xl tracking-tight leading-none uppercase">Global Activity Pulse</h2>
+                    <p class="text-[10px] text-stone-500 font-bold uppercase tracking-widest mt-1">Real-time Entity Logs</p>
+                </div>
+                <div id="pulseLogs" class="p-6 space-y-4 max-h-[500px] overflow-y-auto custom-scrollbar">
+                    <p class="text-center text-stone-300 py-10 italic">Awaiting pulse signal...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Registered Donors List -->
+        <div class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden mb-6">
+            <div class="bg-blue-700 p-4 px-6 flex justify-between items-center text-white cursor-pointer select-none" onclick="toggleSection(this)">
+                <h2 class="font-bold text-lg flex items-center">
+                    <i class="fa-solid fa-bars mr-3 text-blue-200"></i> System Users Management
+                </h2>
+                <div class="flex items-center space-x-3">
+                    <select id="roleFilter" onchange="filterUsersByRole()" onclick="event.stopPropagation()" class="text-xs bg-blue-800 text-white border border-blue-600 rounded-lg px-2 py-1.5 focus:outline-none font-semibold">
+                        <option value="">All Roles</option>
+                        <option value="donors">Donors</option>
+                        <option value="agents">Agents</option>
+                        <option value="hotels">Hotels</option>
+                        <option value="orphanages">Orphanages</option>
+                    </select>
+                    <button onclick="event.stopPropagation(); showAddUserModal()" class="text-xs bg-white/20 text-white px-3 py-1.5 rounded-lg hover:bg-white/30 transition border border-white/30 font-bold"><i class="fa-solid fa-plus mr-2"></i>Add User</button>
+                    <i class="fa-solid fa-chevron-down transition-transform duration-300"></i>
+                </div>
+            </div>
+            <div>
+            <div class="p-4 border-b border-stone-50 bg-stone-50/30">
+                <div class="relative">
+                    <input type="text" id="userSearch" onkeyup="filterUsers()" placeholder="Search users by name, username or contact..." class="w-full bg-white pl-10 pr-4 py-2 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition text-sm">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-stone-400"></i>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-stone-50 text-stone-500 text-sm">
+                        <tr>
+                            <th class="p-4">Name</th>
+                            <th class="p-4">Username</th>
+                            <th class="p-4">Role</th>
+                            <th class="p-4">Contact</th>
+                            <th class="p-4">Location</th>
+                            <th class="p-4">Loc Access</th>
+                            <th class="p-4">Presence</th>
+                            <th class="p-4">Status</th>
+                            <th class="p-4">Last Active</th>
+                            <th class="p-4">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersDonorsTable"></tbody>
+                </table>
+            </div>
+            </div>
+        </div>
+
+        <!-- Food Donation Logs -->
+        <div class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden mb-6">
+            <div class="bg-orange-700 p-4 px-6 flex justify-between items-center text-white cursor-pointer select-none" onclick="toggleSection(this)">
+                <h2 class="font-bold text-lg flex items-center">
+                    <i class="fa-solid fa-bars mr-3 text-orange-200"></i> Food Donations Log
+                </h2>
+                <div class="flex items-center space-x-4">
+                    <button onclick="event.stopPropagation(); exportFoodDonationsToCSV()" class="text-xs bg-white/20 text-white px-3 py-1.5 rounded-lg hover:bg-white/30 transition border border-white/30 font-bold"><i class="fa-solid fa-file-export mr-2"></i>Export CSV</button>
+                    <i class="fa-solid fa-chevron-down transition-transform duration-300"></i>
+                </div>
+            </div>
+            <div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-stone-50 text-stone-500 text-sm">
+                        <tr>
+                            <th class="p-4">Donor</th>
+                            <th class="p-4">Food Item</th>
+                            <th class="p-4">Qty</th>
+                            <th class="p-4">Pickup Address</th>
+                            <th class="p-4">Status</th>
+                            <th class="p-4">Date</th>
+                        </tr>
+                    </thead>
+                    <tbody id="foodDonationsTable"></tbody>
+                </table>
+            </div>
+            </div>
+        </div>
+
+        <!-- Agent Field Reports -->
+        <div class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden mb-6">
+            <div class="bg-[#A34A38] p-4 px-6 flex justify-between items-center text-white cursor-pointer select-none" onclick="toggleSection(this)">
+                <h2 class="font-bold text-lg flex items-center">
+                    <i class="fa-solid fa-bars mr-3 text-orange-200"></i> Field Audit Reports (Agents)
+                </h2>
+                <i class="fa-solid fa-chevron-down transition-transform duration-300"></i>
+            </div>
+            <div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-stone-50 text-stone-500 text-sm">
+                        <tr>
+                            <th class="p-4">Title</th>
+                            <th class="p-4">Audit Notes</th>
+                            <th class="p-4">Photo</th>
+                            <th class="p-4">Status</th>
+                            <th class="p-4">Date</th>
+                            <th class="p-4">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reportsTable"></tbody>
+                </table>
+            </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="fixed inset-0 bg-stone-900/50 backdrop-blur-sm hidden flex items-center justify-center z-[100] p-4">
+        <div class="bg-white rounded-3xl w-full max-w-md p-8 shadow-2xl">
+            <h2 class="text-2xl font-bold text-stone-800 mb-6">Admin Settings</h2>
+            <div class="space-y-6">
+                <div class="flex items-center justify-between p-4 bg-stone-50 rounded-2xl border border-stone-100">
+                    <div>
+                        <p class="font-bold text-stone-800">Admin Location Visibility</p>
+                        <p class="text-xs text-stone-500">Show admin location on audit logs.</p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="settingLocEnabled" class="sr-only peer" onchange="updateLocationSetting(this.checked)">
+                        <div class="w-11 h-6 bg-stone-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-600"></div>
+                    </label>
+                </div>
+                <button onclick="toggleSettingsModal()" class="w-full py-3 text-stone-500 font-bold hover:bg-stone-50 rounded-xl transition">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit User Modal -->
+    <div id="userModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl mx-4">
+            <h3 id="modalTitle" class="text-xl font-bold mb-6 text-stone-800">Add New User</h3>
+            <form id="userForm" class="space-y-4">
+                <div id="userError" class="bg-red-50 text-red-700 p-3 rounded-lg text-sm hidden mb-4 border border-red-100"></div>
+                <input type="hidden" id="editUserId">
+                <div>
+                    <label class="block text-sm font-semibold mb-1">Username*</label>
+                    <input type="text" id="m_username" required class="w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-1">Password</label>
+                    <input type="password" id="m_password" class="w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500" placeholder="Required for new users">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-1">Role*</label>
+                    <select id="m_role" required class="w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="donator">Donor</option>
+                        <option value="agent">Agent</option>
+                        <option value="hotel">Hotel</option>
+                        <option value="anadhasaranalayam">Orphanage</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-1">Display Name</label>
+                    <input type="text" id="m_displayName" class="w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-semibold mb-1">Location (City)</label>
+                        <input type="text" id="m_location" class="w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-1">Children Count</label>
+                        <input type="number" id="m_childrenCount" class="w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-1">Contact Number</label>
+                    <input type="text" id="m_contact" class="w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-1">Full Address</label>
+                    <textarea id="m_address" class="w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500 h-16"></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-1">Bio / Foundation Details</label>
+                    <textarea id="m_bio" class="w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500 h-20"></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-1">Status</label>
+                    <select id="m_status" required class="w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="approved">Approved / Active</option>
+                        <option value="pending">Pending Review</option>
+                    </select>
+                </div>
+                <div class="flex justify-end space-x-3 mt-6">
+                    <button type="button" onclick="closeUserModal()" class="px-4 py-2 text-stone-500 hover:text-stone-800 transition">Cancel</button>
+                    <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-blue-700 transition">Save User</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // --- Reality Check: Ensure we are on the correct server port ---
+        if (window.location.port !== '5000' && window.location.hostname === 'localhost') {
+            alert("⚠️ WARNING: You are on the wrong port (" + window.location.port + ").\n\nThe API is running on port 5000.\n\nPlease visit: http://localhost:5000/admin-dashboard.html");
+        } else if (window.location.protocol === 'file:') {
+            alert("⚠️ CRITICAL: You opened this file directly.\n\nPlease visit: http://localhost:5000/admin-dashboard.html");
+        }
+
+        let allAlerts = [];
+        let allFoodDonations = [];
+        let knownFinDonationIds = new Set();
+        let knownFoodDonationIds = new Set();
+        let knownAlertIds = new Set();
+        let knownOrphanageIds = new Set();
+        let isFirstLoad = true;
+        let serverChart;
+        let logisticsMap;
+        let logisticsMarkers = L.layerGroup();
+        let currentUserRoleFilter = '';
+        let cachedUsers = [];
+        const notificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+
+        function initLogisticsMap() {
+            logisticsMap = L.map('logisticsMap').setView([15.9129, 79.7400], 7);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OSM' }).addTo(logisticsMap);
+            logisticsMarkers.addTo(logisticsMap);
+        }
+
+        async function updateLogisticsIntelligence() {
+            try {
+                const res = await fetch('/api/admin/live-logistics', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
+                const deliveries = await res.json();
+                logisticsMarkers.clearLayers();
+                
+                deliveries.forEach(d => {
+                    if (d.agentLat && d.agentLon) {
+                        const agentIcon = L.divIcon({
+                            className: '',
+                            html: `<div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white shadow-lg border-2 border-white"><i class="fa-solid fa-truck-pickup text-xs"></i></div>`
+                        });
+                        L.marker([d.agentLat, d.agentLon], { icon: agentIcon })
+                            .bindPopup(`<div class="text-xs font-bold">Agent: ${d.agentName}</div><div class="text-[10px]">Carrying: ${d.foodItem}</div>`)
+                            .addTo(logisticsMarkers);
+                    }
+                });
+            } catch (e) { console.error(e); }
+        }
+
+        async function updatePulseFeed() {
+            try {
+                const res = await fetch('/api/admin/activity-pulse', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
+                const logs = await res.json();
+                const container = document.getElementById('pulseLogs');
+                container.innerHTML = logs.map(log => {
+                    const icons = { donation: 'fa-coins text-emerald-500', food: 'fa-bowl-food text-orange-500', request: 'fa-hands-holding-child text-amber-500', alert: 'fa-triangle-exclamation text-red-500' };
+                    return `
+                        <div class="flex space-x-3 border-l-2 border-stone-100 pl-4 py-1 hover:border-blue-200 transition">
+                            <div class="mt-1"><i class="fa-solid ${icons[log.type] || 'fa-circle text-stone-300'} text-[10px]"></i></div>
+                            <div>
+                                <p class="text-xs font-black text-stone-900">${log.title}</p>
+                                <p class="text-[10px] text-stone-500">${log.detail}</p>
+                                <p class="text-[8px] text-stone-300 font-bold uppercase mt-1">${new Date(log.createdAt).toLocaleTimeString()}</p>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (e) { console.error(e); }
+        }
+
+        function initServerChart() {
+            const ctx = document.getElementById('serverLoadChart').getContext('2d');
+            serverChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        {
+                            label: 'Memory Usage (%)',
+                            borderColor: '#6366f1',
+                            backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                            data: [],
+                            fill: true,
+                            tension: 0.4,
+                            borderWidth: 3,
+                            pointRadius: 0
+                        },
+                        {
+                            label: 'Latency (ms)',
+                            borderColor: '#f59e0b',
+                            data: [],
+                            tension: 0.4,
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, max: 100, ticks: { font: { size: 10, weight: 'bold' }, color: '#94a3b8' }, grid: { color: 'rgba(0,0,0,0.03)' } },
+                        y1: { position: 'right', beginAtZero: true, grid: { drawOnChartArea: false }, ticks: { font: { size: 10 }, color: '#f59e0b' } },
+                        x: { ticks: { font: { size: 9 }, color: '#94a3b8' }, grid: { display: false } }
+                    },
+                    plugins: { legend: { display: true, position: 'bottom', labels: { boxWidth: 8, usePointStyle: true, font: { size: 10, weight: 'bold' } } } },
+                    interaction: { intersect: false, mode: 'index' }
+                }
+            });
+        }
+
+        async function deleteItem(type, id) {
+            if (!confirm('Are you sure you want to delete this record forever?')) return;
+            const token = localStorage.getItem('token');
+            const endpoint = (type === 'alert') 
+                ? `/api/admin/community-alerts/${id}` 
+                : `/api/admin/${type}s/${id}`;
+
+            try {
+                const res = await fetch(endpoint, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+                if (res.ok) fetchData();
+            } catch (err) { alert('Delete failed'); }
+        }
+
+        function getStatusClass(status) {
+            status = status?.toLowerCase();
+            if (status === 'success' || status === 'approved' || status === 'resolved') return 'bg-emerald-100 text-emerald-700';
+            if (status === 'completed') return 'bg-emerald-100 text-emerald-700';
+            if (status === 'claimed') return 'bg-blue-100 text-blue-700';
+            if (status === 'available') return 'bg-amber-100 text-amber-700';
+            if (status === 'pending') return 'bg-amber-100 text-amber-700';
+            if (status === 'rejected' || status === 'failure' || status === 'failed') return 'bg-red-100 text-red-700';
+            return 'bg-stone-100 text-stone-700';
+        }
+
+        async function updateStatus(type, id) {
+            const token = localStorage.getItem('token');
+            const status = document.getElementById(`status-${type}-${id}`).value;
+            const endpoint = (type === 'alert')
+                ? `/api/admin/community-alerts/${id}`
+                : `/api/admin/${type}s/${id}/status`;
+            
+            try {
+                const res = await fetch(endpoint, {
+                    method: 'PUT',
+                    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status })
+                });
+                if (res.ok) {
+                    alert('Status updated successfully');
+                    fetchData();
+                }
+            } catch (err) { alert('Update failed'); }
+        }
+
+        function filterAlerts() {
+            const query = document.getElementById('alertsSearch').value.toLowerCase();
+            const filtered = allAlerts.filter(a => 
+                (a.id ? a.id.toString() : '').includes(query) ||
+                (a.type || '').toLowerCase().includes(query) || 
+                (a.description || '').toLowerCase().includes(query) ||
+                (a.contact || '').toLowerCase().includes(query)
+            );
+            renderAlertsTable(filtered);
+        }
+
+        function filterFoodDonations() {
+            const query = document.getElementById('foodSearch').value.toLowerCase();
+            const filtered = allFoodDonations.filter(f => 
+                (f.foodItem || '').toLowerCase().includes(query) || 
+                (f.address || '').toLowerCase().includes(query) ||
+                (f.donorName || '').toLowerCase().includes(query)
+            );
+            renderFoodTable(filtered);
+        }
+
+        function exportFoodDonationsToCSV() {
+            const query = document.getElementById('foodSearch').value.toLowerCase();
+            const filtered = allFoodDonations.filter(f => 
+                (f.foodItem || '').toLowerCase().includes(query) || 
+                (f.address || '').toLowerCase().includes(query) ||
+                (f.donorName || '').toLowerCase().includes(query)
+            );
+
+            if (filtered.length === 0) {
+                alert("No data available to export.");
+                return;
+            }
+
+            // CSV Headers
+            const headers = ["Donor", "Food Item", "Qty", "Pickup Address", "Status", "Date"];
+            
+            // CSV Content Rows - Using quotes to handle commas or special characters in data
+            const rows = filtered.map(f => [
+                `"${(f.donorName || 'Anonymous').replace(/"/g, '""')}"`,
+                `"${(f.foodItem || '').replace(/"/g, '""')}"`,
+                `"${(f.quantity || '').replace(/"/g, '""')}"`,
+                `"${(f.address || 'N/A').replace(/"/g, '""')}"`,
+                `"${(f.status || 'available').replace(/"/g, '""')}"`,
+                `"${new Date(f.createdAt).toLocaleDateString()}"`
+            ]);
+
+            const csvContent = [
+                headers.join(","),
+                ...rows.map(row => row.join(","))
+            ].join("\n");
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = `food_donations_export_${new Date().toISOString().split('T')[0]}.csv`;
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function renderFoodTable(data) {
+            const container = document.getElementById('foodDonationsTable');
+            if (!container) return;
+            container.innerHTML = data.map(f => `
+                <tr class="border-b border-stone-50 hover:bg-stone-50 transition">
+                    <td class="p-4 font-medium">${f.donorName || 'Anonymous'}</td>
+                    <td class="p-4">${f.foodItem}</td>
+                    <td class="p-4 text-sm">${f.quantity}</td>
+                    <td class="p-4 text-xs text-stone-600">${f.address || 'N/A'}</td>
+                    <td class="p-4"><span class="px-2 py-1 rounded text-[10px] font-bold uppercase ${getStatusClass(f.status)}">${f.status || 'available'}</span></td>
+                    <td class="p-4 text-xs text-stone-500">${new Date(f.createdAt).toLocaleDateString()}</td>
+                </tr>
+            `).join('') || '<tr><td colspan="6" class="p-4 text-center text-stone-400">No food donations recorded.</td></tr>';
+        }
+
+        function filterUsersByRole() {
+            currentUserRoleFilter = document.getElementById('roleFilter').value;
+            fetchData();
+        }
+
+        function filterUsers() {
+            const query = document.getElementById('userSearch').value.toLowerCase();
+            const filtered = cachedUsers.filter(u => 
+                (u.displayName || '').toLowerCase().includes(query) || 
+                (u.username || '').toLowerCase().includes(query) ||
+                (u.contactNumber || '').toLowerCase().includes(query)
+            );
+            if (typeof renderUsersTable === 'function') renderUsersTable(filtered);
+        }
+
+        function showAddUserModal() {
+            document.getElementById('modalTitle').innerText = 'Add New User';
+            document.getElementById('userForm').reset();
+            document.getElementById('editUserId').value = '';
+            document.getElementById('m_password').required = true;
+            document.getElementById('userError').classList.add('hidden');
+            document.getElementById('userModal').classList.remove('hidden');
+            document.getElementById('userModal').classList.add('flex');
+        }
+
+        function closeUserModal() {
+            document.getElementById('userError').classList.add('hidden');
+            document.getElementById('userModal').classList.add('hidden');
+            document.getElementById('userModal').classList.remove('flex');
+        }
+
+        function editUser(userId) {
+            const user = cachedUsers.find(u => u.id === userId);
+            if (!user) return;
+            document.getElementById('modalTitle').innerText = 'Edit User';
+            document.getElementById('editUserId').value = user.id;
+            document.getElementById('m_username').value = user.username;
+            document.getElementById('m_password').value = '';
+            document.getElementById('m_password').required = false;
+            document.getElementById('m_role').value = user.role;
+            document.getElementById('m_displayName').value = user.displayName || '';
+            document.getElementById('m_contact').value = user.contactNumber || '';
+            document.getElementById('m_location').value = user.location || '';
+            document.getElementById('m_childrenCount').value = user.childrenCount || 0;
+            document.getElementById('m_address').value = user.address || '';
+            document.getElementById('m_bio').value = user.bio || '';
+            document.getElementById('m_status').value = user.status || 'approved';
+            document.getElementById('userError').classList.add('hidden');
+            document.getElementById('userModal').classList.remove('hidden');
+            document.getElementById('userModal').classList.add('flex');
+        }
+
+        function viewPendingOrphanages() {
+            document.getElementById('roleFilter').value = 'orphanages';
+            currentUserRoleFilter = 'orphanages';
+            fetchData();
+            document.getElementById('usersDonorsTable').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        async function deleteUser(id) {
+            if (!confirm('Are you sure you want to delete this user?')) return;
+            try {
+                const res = await fetch(`/api/admin/users/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+                if (res.ok) fetchData();
+            } catch (err) { alert('Delete failed'); }
+        }
+
+        document.getElementById('userForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('editUserId').value;
+            const userData = {
+                username: document.getElementById('m_username').value,
+                password: document.getElementById('m_password').value || undefined,
+                role: document.getElementById('m_role').value,
+                displayName: document.getElementById('m_displayName').value,
+                contactNumber: document.getElementById('m_contact').value,
+                location: document.getElementById('m_location').value,
+                childrenCount: document.getElementById('m_childrenCount').value,
+                address: document.getElementById('m_address').value,
+                bio: document.getElementById('m_bio').value,
+                status: document.getElementById('m_status').value
+            };
+
+            const url = id ? `/api/admin/users/${id}` : '/api/admin/users';
+            const method = id ? 'PUT' : 'POST';
+
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.innerText = 'Saving...';
+
+            try {
+                const res = await fetch(url, {
+                    method,
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify(userData)
+                });
+                if (res.ok) { 
+                    alert(id ? 'User updated successfully!' : 'User created successfully!');
+                    closeUserModal(); 
+                    fetchData(); 
+                }
+                else { 
+                    const err = await res.json(); 
+                    const errorDiv = document.getElementById('userError');
+                    errorDiv.innerText = err.message || 'Action failed';
+                    errorDiv.classList.remove('hidden');
+                }
+            } catch (err) { 
+                console.error(err);
+                const errorDiv = document.getElementById('userError');
+                errorDiv.innerText = 'Network error. Please check if the server is running.';
+                errorDiv.classList.remove('hidden');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerText = 'Save User';
+            }
+        };
+
+        function toggleSection(header) {
+            const content = header.nextElementSibling;
+            const chevron = header.querySelector('.fa-chevron-down');
+            content.classList.toggle('hidden');
+            if (chevron) chevron.classList.toggle('-rotate-180');
+        }
+
+        function renderComparisonMatrix(users) {
+            const matrix = document.getElementById('comparisonMatrixTable');
+            const orphas = users.filter(u => u.role === 'anadhasaranalayam');
+            document.getElementById('orphaTotalCount').innerText = `${orphas.length} Active Homes`;
+            
+            matrix.innerHTML = orphas.map(o => {
+                const total = o.pendingRequestsCount + o.receivedRequestsCount;
+                const efficiency = total > 0 ? Math.round((o.receivedRequestsCount / total) * 100) : 0;
+                
+                return `
+                    <tr class="hover:bg-stone-50 transition group">
+                        <td class="p-6">
+                            <p class="font-bold text-stone-900 text-sm leading-tight">${o.displayName}</p>
+                            <p class="text-[10px] text-stone-400 uppercase font-black">${o.location || 'Unknown'}</p>
+                        </td>
+                        <td class="p-6">
+                            <div class="flex items-center space-x-2 text-stone-600">
+                                <i class="fa-solid fa-child text-xs"></i>
+                                <span class="text-xs font-bold">${o.childrenCount || 0}</span>
+                            </div>
+                        </td>
+                        <td class="p-6"><span class="text-xs font-black text-amber-600">${o.pendingRequestsCount || 0}</span></td>
+                        <td class="p-6"><span class="text-xs font-black text-emerald-600">${o.receivedRequestsCount || 0}</span></td>
+                        <td class="p-6">
+                            <div class="flex items-center space-x-2">
+                                <div class="w-12 bg-stone-100 h-1 rounded-full overflow-hidden">
+                                    <div class="bg-blue-500 h-full" style="width: ${efficiency}%"></div>
+                                </div>
+                                <span class="text-[9px] font-black text-stone-400">${efficiency}%</span>
+                            </div>
+                        </td>
+                        <td class="p-6 text-right">
+                            <span class="text-[8px] font-black px-2 py-1 rounded-full uppercase ${o.status === 'approved' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}">
+                                ${o.status}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            }).join('') || '<tr><td colspan="6" class="p-10 text-center text-stone-300 italic">No orphanages found in identity pool.</td></tr>';
+        }
+
+        function renderUsersTable(usersList) {
+            const container = document.getElementById('usersDonorsTable');
+            if (!container) return;
+            container.innerHTML = usersList.map(u => `
+                <tr class="hover:bg-stone-50 transition group border-b border-stone-50">
+                    <td class="p-6">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 bg-stone-100 rounded-full flex items-center justify-center text-stone-400 text-[10px] font-black">${u.username[0].toUpperCase()}</div>
+                            <div>
+                                <span class="font-bold text-stone-800">${u.displayName || 'N/A'}</span>
+                                ${u.role === 'agent' && u.completedCount >= 10 ? `<i class="fa-solid fa-certificate text-emerald-500 ml-1" title="Verified Agent (10+ Handovers)"></i>` : ''}
+                                <p class="text-[10px] text-stone-400 font-mono">@${u.username}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="p-6 text-[10px] font-black uppercase tracking-widest text-stone-500">${u.role}</td>
+                    <td class="p-6">
+                        <div class="flex items-center space-x-2">
+                            <span class="w-1.5 h-1.5 rounded-full ${u.isOnline ? 'bg-emerald-500 animate-pulse' : 'bg-stone-300'}"></span>
+                            <span class="text-[10px] font-bold ${u.isOnline ? 'text-emerald-600' : 'text-stone-400'}">${u.isOnline ? 'Active Now' : 'Disconnected'}</span>
+                        </div>
+                    </td>
+                    <td class="p-6">
+                        <select onchange="updateStatus('user', ${u.id}, this.value)" class="text-[10px] border rounded px-1 py-0.5 ${getStatusClass(u.status)}">
+                            <option value="approved" ${u.status==='approved'?'selected':''}>Approved</option>
+                            <option value="pending" ${u.status==='pending'?'selected':''}>Pending</option>
+                            <option value="rejected" ${u.status==='rejected'?'selected':''}>Rejected</option>
+                        </select>
+                    </td>
+                    <td class="p-6 text-[9px] text-stone-400 font-black uppercase">${u.lastLogin ? new Date(u.lastLogin).toLocaleDateString() : 'No History'}</td>
+                    <td class="p-6 text-right">
+                        <button onclick="editUser(${u.id})" class="p-2 text-stone-300 hover:text-blue-600 transition"><i class="fa-solid fa-user-pen"></i></button>
+                        <button onclick="deleteUser(${u.id})" class="p-2 text-stone-300 hover:text-red-600 transition"><i class="fa-solid fa-user-slash"></i></button>
+                    </td>
+                </tr>
+            `).join('') || `<tr><td colspan="7" class="p-4 text-center text-stone-400">No users found.</td></tr>`;
+        }
+
+        // Modified updateStatus to handle manual passing of value
+        async function updateStatus(type, id, manualValue) {
+            const token = localStorage.getItem('token');
+            const status = manualValue || document.getElementById(`status-${type}-${id}`).value;
+            const endpoint = (type === 'alert') ? `/api/admin/community-alerts/${id}` : `/api/admin/${type}s/${id}/status`;
+            
+            try {
+                const res = await fetch(endpoint, {
+                    method: 'PUT',
+                    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status })
+                });
+                if (res.ok) fetchData();
+            } catch (err) { alert('Update failed'); }
+        }
+
+        function renderAlertsTable(alertsList) {
+            document.getElementById('alertsTable').innerHTML = alertsList.map(a => `
+                <tr class="border-b border-stone-50 hover:bg-stone-50 transition">
+                    <td class="p-4 text-xs font-bold text-stone-400">${a.id}</td>
+                    <td class="p-4"><span class="text-xs font-bold uppercase text-red-600">${(a.type || 'unknown').replace('_', ' ')}</span></td>
+                    <td class="p-4 text-sm">${a.description}</td>
+                    <td class="p-4 text-xs text-stone-500">${a.contact || 'Anonymous'}</td>
+                    <td class="p-4 text-xs">
+                        ${a.photo ? `<a href="/uploads/${a.photo}" target="_blank" class="text-blue-600 hover:underline font-semibold">View Photo</a>` : '<span class="text-stone-400 italic">No Photo</span>'}
+                    </td>
+                    <td class="p-4 text-xs text-stone-500">${a.date || 'N/A'}</td>
+                    <td class="p-4"><span class="px-2 py-1 rounded text-[10px] font-bold uppercase ${getStatusClass(a.status)}">${a.status || 'pending'}</span></td>
+                    <td class="p-4">
+                        <select id="status-alert-${a.id}" class="text-xs border rounded p-1">
+                            <option value="pending" ${a.status?.toLowerCase()==='pending'?'selected':''}>Pending</option>
+                            <option value="reviewed" ${a.status?.toLowerCase()==='reviewed'?'selected':''}>Reviewed</option>
+                            <option value="approved" ${a.status?.toLowerCase()==='approved'?'selected':''}>Approved</option>
+                            <option value="resolved" ${a.status?.toLowerCase()==='resolved'?'selected':''}>Resolved</option>
+                            <option value="rejected" ${a.status?.toLowerCase()==='rejected'?'selected':''}>Rejected</option>
+                        </select>
+                        <button onclick="updateStatus('alert', ${a.id})" class="text-blue-600 ml-1" title="Save Status"><i class="fa-solid fa-floppy-disk"></i></button>
+                        <button onclick="deleteItem('alert', ${a.id})" class="text-red-400 ml-2 hover:text-red-600"><i class="fa-solid fa-trash-can"></i></button>
+                    </td>
+                </tr>
+            `).join('') || '<tr><td colspan="8" class="p-4 text-center text-stone-400">No alerts reported.</td></tr>';
+        }
+
+        async function fetchData() {
+            const token = localStorage.getItem('token');
+            if (!token || localStorage.getItem('role') !== 'admin') window.location.href = 'login.html';
+
+            const headers = { 'Authorization': `Bearer ${token}` };
+
+            try {
+                // We fetch all users to check for notifications even if a filter is active in the UI
+                const [donations, requests, reports, alerts, foodDonations, registeredDonors] = await Promise.all([
+                    fetch('/api/admin/donations', { headers }).then(r => r.ok ? r.json() : []),
+                    fetch('/api/admin/requests', { headers }).then(r => r.ok ? r.json() : []),
+                    fetch('/api/admin/reports', { headers }).then(r => r.ok ? r.json() : []),
+                    fetch('/api/admin/community-alerts', { headers }).then(r => r.ok ? r.json() : []),
+                    fetch('/api/admin/food-donations', { headers }).then(r => r.ok ? r.json() : []),
+                    fetch('/api/admin/users', { headers }).then(r => r.ok ? r.json() : [])
+          ]);
+                // Notification logic: Detect new financial donations, food donations, or alerts
+                const currentFinDonationIds = new Set(donations.map(d => d.id));
+                const currentFoodDonationIds = new Set(foodDonations.map(f => f.id));
+                const currentAlertIds = new Set(alerts.map(a => a.id));
+                
+                // Filter pending orphanages for notification detection
+                const pendingOrphanages = registeredDonors.filter(u => u.role === 'anadhasaranalayam' && u.status === 'pending');
+                const currentOrphanageIds = new Set(pendingOrphanages.map(u => u.id));
+
+                if (!isFirstLoad) {
+                    const hasNewFin = donations.some(d => !knownFinDonationIds.has(d.id));
+                    const hasNewFood = foodDonations.some(f => !knownFoodDonationIds.has(f.id));
+                    const hasNewAlert = alerts.some(a => !knownAlertIds.has(a.id));
+                    const hasNewOrphanage = pendingOrphanages.some(u => !knownOrphanageIds.has(u.id));
+
+                    if (hasNewOrphanage) {
+                        document.getElementById('newOrphanageBanner').classList.remove('hidden');
+                        document.getElementById('newOrphanageBanner').classList.add('flex');
+                    }
+
+                    if (hasNewFin || hasNewFood || hasNewAlert || hasNewOrphanage) {
+                        notificationSound.play().catch(e => console.warn("Sound blocked until user interaction."));
+                    }
+                }
+                knownFinDonationIds = currentFinDonationIds;
+                knownFoodDonationIds = currentFoodDonationIds;
+                knownAlertIds = currentAlertIds;
+                knownOrphanageIds = currentOrphanageIds;
+
+                if (pendingOrphanages.length === 0) {
+                    document.getElementById('newOrphanageBanner').classList.add('hidden');
+                    document.getElementById('newOrphanageBanner').classList.remove('flex');
+                }
+                isFirstLoad = false;
+
+                document.getElementById('totalDonations').innerText = `₹${donations.reduce((acc, d) => d.status === 'success' ? acc + d.amount : acc, 0)}`;
+                document.getElementById('openRequests').innerText = requests.filter(r => r.status === 'pending').length;
+                document.getElementById('totalReports').innerText = reports.length;
+                document.getElementById('totalAlerts').innerText = alerts.length;
+
+                // Populate Donations
+                document.getElementById('donationsTable').innerHTML = donations.map(d => `
+                    <tr class="border-b border-stone-50 hover:bg-stone-50 transition">
+                        <td class="p-4 font-medium">${d.donorName || 'Anonymous'}</td>
+                        <td class="p-4 font-bold">₹${d.amount}</td>
+                        <td class="p-4 text-xs">${d.donorPhone || 'N/A'}<br><span class="text-stone-400">${d.donorEmail}</span></td>
+                        <td class="p-4 text-xs text-stone-600">${d.donorAddress || 'N/A'}</td>
+                        <td class="p-4"><span class="px-2 py-1 rounded text-[10px] font-bold uppercase ${getStatusClass(d.status)}">${d.status}</span></td>
+                        <td class="p-4 text-sm text-stone-500">${new Date(d.createdAt).toLocaleDateString()}</td>
+                        <td class="p-4">
+                            <select id="status-donation-${d.id}" class="text-xs border rounded p-1">
+                                <option value="pending" ${d.status==='pending'?'selected':''}>Pending</option>
+                                <option value="success" ${d.status==='success'?'selected':''}>Success</option>
+                                <option value="failed" ${d.status==='failed'?'selected':''}>Failed</option>
+                            </select>
+                            <button onclick="updateStatus('donation', ${d.id})" class="text-blue-600 ml-1"><i class="fa-solid fa-save"></i></button>
+                            <button onclick="deleteItem('donation', ${d.id})" class="text-red-400 ml-2 hover:text-red-600"><i class="fa-solid fa-trash-can"></i></button>
+                        </td>
+                    </tr>
+                `).join('') || '<tr><td colspan="7" class="p-4 text-center text-stone-400">No financial donations yet.</td></tr>';
+
+                // Populate Orphanage Requests
+                document.getElementById('requestsTable').innerHTML = requests.map(r => `
+                    <tr class="border-b border-stone-50 hover:bg-stone-50 transition">
+                        <td class="p-4 font-medium">
+                            ${r.orphanageName}
+                            ${r.isUrgent ? `<br><span class="text-[8px] font-bold bg-red-100 text-red-600 px-1.5 py-0.5 rounded uppercase animate-pulse">Urgent</span>` : ''}
+                        </td>
+                        <td class="p-4">${r.item}</td>
+                        <td class="p-4 text-sm">${r.quantity}</td>
+                        <td class="p-4 text-xs text-stone-400 max-w-[150px] truncate" title="${r.address || ''}">${r.address || 'N/A'}</td>
+                        <td class="p-4 text-sm font-bold text-blue-600">${r.servesCount || 0} Kids</td>
+                        <td class="p-4">
+                            <span class="px-2 py-1 rounded text-[10px] font-bold uppercase ${r.status?.toLowerCase() === 'approved' && r.isUrgent ? 'bg-indigo-100 text-indigo-700 border border-indigo-200' : getStatusClass(r.status)}">
+                                ${r.status?.toLowerCase() === 'approved' && r.isUrgent ? 'Auto-Approved' : r.status}
+                            </span>
+                        </td>
+                        <td class="p-4">
+                            <select id="status-request-${r.id}" class="text-xs border rounded p-1">
+                                <option value="pending" ${r.status==='pending'?'selected':''}>Pending</option>
+                                <option value="approved" ${r.status==='approved'?'selected':''}>Approved</option>
+                                <option value="rejected" ${r.status==='rejected'?'selected':''}>Rejected</option>
+                            </select>
+                            <button onclick="updateStatus('request', ${r.id})" class="text-blue-600 ml-1"><i class="fa-solid fa-save"></i></button>
+                            <button onclick="deleteItem('request', ${r.id})" class="text-red-400 ml-2 hover:text-red-600"><i class="fa-solid fa-trash-can"></i></button>
+                        </td>
+                    </tr>
+                `).join('') || '<tr><td colspan="5" class="p-4 text-center text-stone-400">No requests found.</td></tr>';
+
+                // Populate Registered Users with current filter
+                let usersToDisplay = registeredDonors;
+                if (currentUserRoleFilter) {
+                    const roleMapping = {
+                        'donors': 'donator',
+                        'agents': 'agent',
+                        'hotels': 'hotel',
+                        'orphanages': 'anadhasaranalayam'
+                    };
+                    const targetRole = roleMapping[currentUserRoleFilter.toLowerCase()] || currentUserRoleFilter;
+                    usersToDisplay = registeredDonors.filter(u => u.role === targetRole);
+                }
+                
+                cachedUsers = usersToDisplay;
+                const userSearchQuery = document.getElementById('userSearch').value;
+                if (!userSearchQuery) renderUsersTable(usersToDisplay);
+
+                // Populate Community Alerts
+                allAlerts = alerts;
+                const searchQuery = document.getElementById('alertsSearch').value;
+                if (!searchQuery) renderAlertsTable(allAlerts);
+
+                // Populate Food Donations
+                allFoodDonations = foodDonations;
+                const foodSearchQuery = document.getElementById('foodSearch').value;
+                if (!foodSearchQuery) renderFoodTable(allFoodDonations);
+
+                // Populate Agent Reports
+                document.getElementById('reportsTable').innerHTML = reports.map(rep => `
+                    <tr class="border-b border-stone-50 hover:bg-stone-50 transition">
+                        <td class="p-4 font-medium">${rep.title}</td>
+                        <td class="p-4 text-sm text-stone-600"><div class="line-clamp-3">${rep.description}</div></td>
+                        <td class="p-4 text-xs">
+                            ${rep.imageUrl ? `<a href="${rep.imageUrl}" target="_blank" class="text-blue-600 hover:underline font-semibold">View Photo</a>` : '<span class="text-stone-400 italic">No Photo</span>'}
+                        </td>
+                        <td class="p-4"><span class="px-2 py-1 rounded text-[10px] font-bold uppercase ${getStatusClass(rep.status)}">${rep.status || 'pending'}</span></td>
+                        <td class="p-4 text-xs text-stone-500">${new Date(rep.createdAt).toLocaleDateString()}</td>
+                        <td class="p-4">
+                            <select id="status-report-${rep.id}" class="text-xs border rounded p-1">
+                                <option value="pending" ${rep.status==='pending'?'selected':''}>Pending</option>
+                                <option value="approved" ${rep.status==='approved'?'selected':''}>Approved</option>
+                                <option value="rejected" ${rep.status==='rejected'?'selected':''}>Rejected</option>
+                            </select>
+                            <button onclick="updateStatus('report', ${rep.id})" class="text-blue-600 ml-1"><i class="fa-solid fa-save"></i></button>
+                            <button onclick="deleteItem('report', ${rep.id})" class="text-red-400 ml-2 hover:text-red-600"><i class="fa-solid fa-trash-can"></i></button>
+                        </td>
+                    </tr>
+                `).join('') || '<tr><td colspan="6" class="p-4 text-center text-stone-400">No audit reports yet.</td></tr>';
+
+            } catch (err) { console.error(err); }
+        }
+
+        async function seedCommunityAlerts() {
+            if (!confirm('Are you sure you want to seed sample community alerts? This will only add if the table is currently empty.')) return;
+            const token = localStorage.getItem('token');
+            try {
+                const res = await fetch('/api/admin/seed-community-alerts', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                alert(data.message);
+                fetchData(); // Refresh data after seeding
+            } catch (err) {
+                console.error('Error seeding alerts:', err);
+                alert('Failed to seed alerts. Check console for details.');
+            }
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = 'index.html';
+        }
+
+        // Initial load
+        document.addEventListener('DOMContentLoaded', () => {
+            initServerChart();
+            fetchData();
+        });
+        // Real-time update: Auto-refresh data every 5 seconds for live monitoring
+        setInterval(fetchData, 5000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="te">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mana Vivekam Foundation | Transparency & Trust</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Noto+Sans+Telugu:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', 'Noto Sans Telugu', sans-serif;
+            background-color: #FAF6F0; /* Soft warm palette from UI mockup */
+        }
+        .smooth-scroll { scroll-behavior: smooth; }
+    </style>
+</head>
+<body class="text-stone-800 smooth-scroll">
+
+    <header class="bg-[#FFFDF9]/90 backdrop-blur-md border-b border-orange-100/60 sticky top-0 z-50 shadow-xs">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="#" class="flex items-center space-x-2 group">
+                <span class="text-2xl text-[#A34A38]"><i class="fa-solid fa-hands-holding-child"></i></span>
+                <span class="text-xl md:text-2xl font-bold tracking-tight text-[#A34A38] group-hover:text-[#82392B] transition">Mana Vivekam Foundation  </span>
+            </a>
+            
+            <nav class="hidden md:flex space-x-8 font-medium text-stone-600">
+                <a href="#" class="text-[#A34A38] border-b-2 border-[#A34A38] pb-1">Home</a>
+                <a href="#about" class="hover:text-[#A34A38] transition">About Us</a>
+                <a href="#stories" class="hover:text-[#A34A38] transition">Impact Stories</a>
+                <a href="#orphanages" class="hover:text-[#A34A38] transition">Orphanages</a>
+                <a href="leaderboard.html" class="hover:text-[#A34A38] transition">Leaderboard</a>
+                <a href="#flow" class="hover:text-[#A34A38] transition">How We Work</a>
+                <a href="report-need.html" class="text-red-600 hover:text-red-700 transition font-bold">Report Need</a>
+            </nav>
+            <div class="flex items-center space-x-4">
+                <a href="login.html" id="loginLink" class="text-stone-600 hover:text-[#A34A38] font-medium transition text-sm md:text-base">
+                    <i class="fa-solid fa-user-lock mr-1.5"></i>Login
+                </a>
+                <button onclick="toggleRegisterModal()" id="registerLink" class="text-stone-600 hover:text-[#A34A38] font-medium transition text-sm md:text-base cursor-pointer">
+                    <i class="fa-solid fa-user-plus mr-1.5"></i>Register
+                </button>
+                <a href="#donate" class="bg-[#A34A38] text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-[#82392B] transition duration-300 shadow-md hover:shadow-lg text-sm md:text-base">
+                    <i class="fa-solid fa-heart mr-2 text-xs"></i>Donate Now
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <section id="about" class="bg-[#A34A38] text-white py-20 px-6 relative overflow-hidden">
+        <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px]"></div>
+        <div class="max-w-7xl mx-auto grid lg:grid-cols-12 gap-12 items-center relative z-10">
+            
+            <div class="lg:col-span-7 space-y-6">
+                <span class="bg-amber-500/20 text-amber-300 border border-amber-500/30 px-3 py-1 rounded-full text-xs font-semibold tracking-wider uppercase">Welcome to Mana Vivekam</span>
+                <h1 class="text-4xl md:text-6xl font-bold tracking-tight leading-tight">Inspired to Make a Real Difference</h1>
+                <p class="text-xl md:text-2xl text-amber-100 font-semibold border-l-4 border-amber-400 pl-4 py-1">
+                    "కొంత మంది కలిసి మరికొంత మందికి సహాయం చేయడం."
+                </p>
+                <p class="text-stone-200 text-base md:text-lg max-w-xl leading-relaxed">
+                    We bridge the gap between secure donors and verified local orphanages, single mothers, and families in extreme poverty through full visual transparency and field verification.
+                </p>
+                <div class="pt-4 flex flex-wrap gap-4">
+                    <a href="#donate" class="bg-[#D97706] text-white px-7 py-3.5 rounded-xl font-bold text-base hover:bg-[#B45309] transition shadow-lg hover:scale-[1.02] duration-200">
+                        Support Our Cause Directly
+                    </a>
+                    <a href="#stories" class="bg-white/10 border border-white/20 text-white px-7 py-3.5 rounded-xl font-semibold text-base hover:bg-white/20 transition backdrop-blur-xs">
+                        See Impact Stories
+                    </a>
+                </div>
+            </div>
+            
+            <div class="lg:col-span-5 grid grid-cols-2 gap-3 bg-[#82392B]/60 p-4 rounded-2xl border border-white/10 shadow-2xl">
+                <img src="https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&q=80&w=400" alt="Charity" class="w-full h-44 object-cover rounded-xl shadow-md hover:scale-105 transition duration-300">
+                <img src="https://images.unsplash.com/photo-1542810634-71277d95dcbb?auto=format&fit=crop&q=80&w=400" alt="Children Support" class="w-full h-44 object-cover rounded-xl shadow-md hover:scale-105 transition duration-300 mt-4">
+                <img src="https://images.unsplash.com/photo-1509099836639-18ba1795216d?auto=format&fit=crop&q=80&w=400" alt="Poor Welfare" class="w-full h-44 object-cover rounded-xl shadow-md hover:scale-105 transition duration-300 -mt-4">
+                <img src="https://images.unsplash.com/photo-1594708767771-a7502209ff51?auto=format&fit=crop&q=80&w=400" alt="Education Welfare" class="w-full h-44 object-cover rounded-xl shadow-md hover:scale-105 transition duration-300">
+            </div>
+
+        </div>
+    </section>
+
+    <div class="bg-[#F3E8EE] py-6 text-center border-y border-pink-100/60 px-6">
+        <div class="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-center gap-4">
+            <span class="w-12 h-12 bg-white rounded-full text-[#A34A38] shadow-xs flex items-center justify-center text-xl shrink-0">
+                <i class="fa-solid fa-bullseye-arrow"></i>
+            </span>
+            <p class="text-lg md:text-xl font-bold text-stone-700">
+                Our Primary Goal: <span class="font-normal text-stone-600">A structured, collective community effort dedicated entirely to empowering the poor and vulnerable.</span>
+            </p>
+        </div>
+    </div>
+
+    <section id="stories" class="max-w-7xl mx-auto px-6 py-20">
+
+        <div class="text-center max-w-2xl mx-auto mb-16">
+            <h2 class="text-3xl md:text-4xl font-bold text-[#A34A38] mb-4">Featured Impact Stories</h2>
+            <p class="text-stone-500">Real, unfiltered data and on-ground baseline updates directly from the villages and local circles we assist.</p>
+        </div>
+        
+        <div class="grid md:grid-cols-3 gap-8">
+            <div class="bg-white rounded-2xl shadow-xs border border-stone-200/60 overflow-hidden group hover:shadow-xl transition duration-300">
+                <div class="relative h-56 bg-stone-100 overflow-hidden">
+                    <img src="https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?auto=format&fit=crop&q=80&w=600" alt="Local Need" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                    <span class="absolute top-4 left-4 bg-emerald-600 text-white text-xs px-2.5 py-1 rounded-md font-semibold">Active Case</span>
+                </div>
+                <div class="p-6 space-y-3">
+                    <h3 class="text-xl font-bold text-stone-800 group-hover:text-[#A34A38] transition">Local People's Stories</h3>
+                    <p class="text-stone-600 text-sm leading-relaxed">
+                        Documenting ground-level economic struggles, food scarcities, and directly funding survival essentials to rural laborers.
+                    </p>
+                    <div class="pt-2">
+                        <a href="case-study-local-people.html" class="text-[#A34A38] font-bold text-sm inline-flex items-center group-hover:translate-x-1 transition duration-200 cursor-pointer">
+                            Read Case Study <i class="fa-solid fa-arrow-right ml-2 text-xs"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-xs border border-stone-200/60 overflow-hidden group hover:shadow-xl transition duration-300">
+                <div class="relative h-56 bg-stone-100 overflow-hidden">
+                    <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=600" alt="Women Empowerment" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                    <span class="absolute top-4 left-4 bg-purple-600 text-white text-xs px-2.5 py-1 rounded-md font-semibold">Empowerment</span>
+                </div>
+                <div class="p-6 space-y-3">
+                    <h3 class="text-xl font-bold text-stone-800 group-hover:text-[#A34A38] transition">Empowering Single Women</h3>
+                    <p class="text-stone-600 text-sm leading-relaxed">
+                        Providing small business grants, sewing machines, and micro-welfare support to widows and unsupported single mothers.
+                    </p>
+                    <div class="pt-2">
+                        <a href="case-study-women-empowerment.html" class="text-[#A34A38] font-bold text-sm inline-flex items-center group-hover:translate-x-1 transition duration-200 cursor-pointer">
+                            Read Case Study <i class="fa-solid fa-arrow-right ml-2 text-xs"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-xs border border-stone-200/60 overflow-hidden group hover:shadow-xl transition duration-300">
+                <div class="relative h-56 bg-stone-100 overflow-hidden">
+                    <img src="https://images.unsplash.com/photo-1516627145497-ae6968895b74?auto=format&fit=crop&q=80&w=600" alt="Orphanages" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                    <span class="absolute top-4 left-4 bg-amber-600 text-white text-xs px-2.5 py-1 rounded-md font-semibold">Verified Center</span>
+                </div>
+                <div class="p-6 space-y-3">
+                    <h3 class="text-xl font-bold text-stone-800 group-hover:text-[#A34A38] transition">Local Orphanages Support</h3>
+                    <p class="text-stone-600 text-sm leading-relaxed">
+                        Sponsoring comprehensive health checkups, structural house maintenance, learning kits, and healthy groceries.
+                    </p>
+                    <div class="pt-2">
+                        <button onclick="openStoryModal('Local Orphanages Support', 'We conduct quarterly health audits for children in local homes. Beyond groceries, we focus on structural improvements like repairing roofs and providing clean drinking water systems, ensuring a safe and conducive environment for growth.')" class="text-[#A34A38] font-bold text-sm inline-flex items-center group-hover:translate-x-1 transition duration-200 cursor-pointer">
+                            Read Case Study <i class="fa-solid fa-arrow-right ml-2 text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Story Details Modal -->
+    <div id="storyModal" class="fixed inset-0 bg-stone-900/60 backdrop-blur-md hidden flex items-center justify-center z-[100] p-4">
+        <div class="bg-white rounded-3xl w-full max-w-lg p-8 shadow-2xl relative">
+            <button onclick="closeStoryModal()" class="absolute top-5 right-5 text-stone-400 hover:text-stone-600 transition cursor-pointer">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+            <div class="space-y-4">
+                <h2 id="modalStoryTitle" class="text-2xl font-bold text-[#A34A38]">Story Title</h2>
+                <div class="w-12 h-1 bg-amber-400 rounded-full"></div>
+                <p id="modalStoryContent" class="text-stone-600 leading-relaxed text-base">
+                    Content will be injected here.
+                </p>
+                <div class="pt-6 border-t border-stone-100 flex justify-end">
+                    <a href="#donate" onclick="closeStoryModal()" class="bg-[#A34A38] text-white px-6 py-3 rounded-xl font-bold hover:bg-[#82392B] transition shadow-md">
+                        Support This Mission
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openStoryModal(title, content) {
+            document.getElementById('modalStoryTitle').innerText = title;
+            document.getElementById('modalStoryContent').innerText = content;
+            const modal = document.getElementById('storyModal');
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeStoryModal() {
+            const modal = document.getElementById('storyModal');
+            modal.classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+    </script>
+
+    <section id="flow" class="bg-gradient-to-b from-stone-200/40 to-stone-100/10 py-20 px-6 border-y border-stone-200/50">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center max-w-2xl mx-auto mb-16">
+                <h2 class="text-3xl font-bold text-[#A34A38] mb-4">Flowchart of Assistance</h2>
+                <p class="text-stone-500">Here is exactly how information moves from an orphan or single mother to secure website funding allocation.</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 relative">
+                
+                <div class="bg-white p-6 rounded-2xl shadow-xs border border-stone-200/40 relative flex flex-col items-center text-center">
+                    <div class="w-14 h-14 bg-amber-100 text-amber-700 rounded-2xl flex items-center justify-center text-xl font-bold mb-4 shadow-xs">
+                        <i class="fa-solid fa-child-reaching"></i>
+                    </div>
+                    <h4 class="font-bold text-lg text-stone-800 mb-2">1. Orphan Child Identified</h4>
+                    <p class="text-sm text-stone-500">A child, widow, or vulnerable community entity is located experiencing critical basic necessity deficits.</p>
+                </div>
+                
+                <div class="bg-white p-6 rounded-2xl shadow-xs border border-stone-200/40 relative flex flex-col items-center text-center">
+                    <div class="w-14 h-14 bg-blue-100 text-blue-700 rounded-2xl flex items-center justify-center text-xl font-bold mb-4 shadow-xs">
+                        <i class="fa-solid fa-camera-retro"></i>
+                    </div>
+                    <h4 class="font-bold text-lg text-stone-800 mb-2">2. Local Gatherer Audit</h4>
+                    <p class="text-sm text-stone-500">Verified local field partners visit, validate live status parameters, log geolocation, and take photos.</p>
+                </div>
+                
+                <div class="bg-white p-6 rounded-2xl shadow-xs border border-stone-200/40 relative flex flex-col items-center text-center">
+                    <div class="w-14 h-14 bg-emerald-100 text-emerald-700 rounded-2xl flex items-center justify-center text-xl font-bold mb-4 shadow-xs">
+                        <i class="fa-solid fa-building-ngo"></i>
+                    </div>
+                    <h4 class="font-bold text-lg text-stone-800 mb-2">3. Local Organization</h4>
+                    <p class="text-sm text-stone-500">Mana Vivekam central structure processes structural needs lists and approves listing on portal.</p>
+                </div>
+                
+                <div class="bg-white p-6 rounded-2xl shadow-xs border border-stone-200/40 relative flex flex-col items-center text-center">
+                    <div class="w-14 h-14 bg-rose-100 text-rose-700 rounded-2xl flex items-center justify-center text-xl font-bold mb-4 shadow-xs">
+                        <i class="fa-solid fa-money-bill-transfer"></i>
+                    </div>
+                    <h4 class="font-bold text-lg text-stone-800 mb-2">4. Your Direct Donation</h4>
+                    <p class="text-sm text-stone-500">Donors complete secure payment pipeline online. Audit trails update automatically to build complete trust.</p>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <section id="orphanages" class="max-w-7xl mx-auto px-6 py-20 grid lg:grid-cols-12 gap-12 items-start">
+        
+        <div class="lg:col-span-7 space-y-6">
+            <div class="flex justify-between items-center flex-wrap gap-4">
+                <h3 class="text-2xl font-bold text-stone-800">
+                    <i class="fa-solid fa-clipboard-list text-[#A34A38] mr-2"></i> List of Registered Local Orphanages
+                </h3>
+                <span class="flex items-center text-[10px] font-bold text-emerald-600 uppercase tracking-widest bg-emerald-50 px-3 py-1.5 rounded-full shadow-sm"><span class="w-2 h-2 bg-emerald-500 rounded-full mr-2 animate-pulse"></span> Database Live</span>
+            </div>
+            
+            <div class="relative">
+                <input type="text" id="orphanageSearch" onkeyup="filterOrphanages()" placeholder="Search by region, home name, or verification ID..." class="w-full bg-white pl-11 pr-4 py-3 border border-stone-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#A34A38]/50 transition shadow-xs text-sm">
+                <i class="fa-solid fa-magnifying-glass absolute left-4 top-4 text-stone-400"></i>
+            </div>
+            
+            <div id="orphanageList" class="space-y-4">
+                <p class="text-stone-400 text-center py-8 italic">Fetching registered homes from records...</p>
+            </div>
+        </div>
+
+        <div class="lg:col-span-5 bg-[#FFFDF9] p-6 rounded-2xl border border-orange-100 shadow-md space-y-4">
+            <h3 class="text-2xl font-bold text-stone-800 flex items-center">
+                <i class="fa-solid fa-shield-halved text-amber-600 mr-2"></i> Transparency & Impact
+            </h3>
+            <p class="text-stone-600 text-sm leading-relaxed">
+                Every single rupee we receive is logged transparently. We explicitly enforce video updates and physical balance ledger monitoring to protect public faith and ensure absolute validation.
+            </p>
+            
+            <div class="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-lg">
+                <h5 class="text-sm font-bold text-amber-900 mb-1">పారదర్శకత ప్రమాణం (Transparency Standard)</h5>
+                <p class="text-xs text-amber-800 leading-relaxed">
+                    సహాయం పొందిన ప్రతి అనాథ శరణాలయం తాలూకు పూర్తి రికార్డులు మరియు ఖర్చుల వివరాలు ఇక్కడ ఎప్పటికప్పుడు అప్‌డేట్ చేయబడతాయి.
+                </p>
+            </div>
+            
+            <div class="bg-stone-900 text-white rounded-xl p-5 space-y-4 shadow-inner">
+                <div class="flex justify-between items-center border-b border-stone-800 pb-2">
+                    <span class="text-xs text-stone-400 uppercase tracking-wider font-semibold">Live System Audit Logs</span>
+                    <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+                </div>
+                <div class="space-y-3 font-mono text-xs text-stone-300">
+                    <div class="flex justify-between">
+                        <span>• Fund Transferred to Case #1042</span>
+                        <span class="text-emerald-400">₹45,000 Verified</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>• Groceries Dispatched (Guntur)</span>
+                        <span class="text-emerald-400">Delivered</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>• Independent Public Audit Ledger</span>
+                        <span class="text-amber-400">100% Matching</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </section>
+
+    <section id="latest-uploads" class="max-w-7xl mx-auto px-6 py-16">
+        <div class="text-center max-w-2xl mx-auto mb-10">
+            <h2 class="text-3xl md:text-4xl font-bold text-[#A34A38] mb-4">Latest Audit Photos</h2>
+            <p class="text-stone-500">Real uploads from field verification team. (Newest first)</p>
+        </div>
+
+        <div id="uploadsGrid" class="grid md:grid-cols-3 gap-8">
+            <p id="uploadsLoading" class="text-stone-500 text-center">Loading latest uploads...</p>
+        </div>
+    </section>
+
+    <!-- Donor Highlights Section -->
+    <section class="bg-white py-16 border-t border-stone-100">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-[#A34A38]">Our Noble Supporters</h2>
+                <p class="text-stone-500 mt-2">Hearts that beat for the community</p>
+            </div>
+            <div id="donorWall" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
+                <!-- Dynamic Donors -->
+                <div class="animate-pulse bg-stone-100 h-32 rounded-2xl"></div>
+                <div class="animate-pulse bg-stone-100 h-32 rounded-2xl"></div>
+                <div class="animate-pulse bg-stone-100 h-32 rounded-2xl"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Verified Agents Gallery -->
+    <section class="bg-[#F8FAFC] py-16 border-t border-stone-100">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-[#A34A38]">Verified Field Agents</h2>
+                <p class="text-stone-500 mt-2">Certified heroes ensuring 100% handover accuracy and transparency.</p>
+            </div>
+            <div id="agentGallery" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-8">
+                <!-- Dynamic Agents -->
+                <div class="animate-pulse bg-white h-48 rounded-[2rem] border border-stone-100"></div>
+                <div class="animate-pulse bg-white h-48 rounded-[2rem] border border-stone-100"></div>
+                <div class="animate-pulse bg-white h-48 rounded-[2rem] border border-stone-100"></div>
+                <div class="animate-pulse bg-white h-48 rounded-[2rem] border border-stone-100"></div>
+            </div>
+        </div>
+    </section>
+
+    <section id="donate" class="bg-stone-900 text-white py-20 px-6 text-center relative overflow-hidden">
+        <div class="absolute inset-0 opacity-5 bg-[linear-gradient(to_right,#808080_1px,transparent_1px),linear-gradient(to_bottom,#808080_1px,transparent_1px)] [background-size:24px_24px]"></div>
+        <div class="max-w-3xl mx-auto relative z-10 space-y-6">
+            <h2 class="text-3xl md:text-5xl font-bold tracking-tight">Support Our Cause Directly</h2>
+            <p class="text-stone-400 text-base md:text-lg max-w-xl mx-auto leading-relaxed">
+                Your small monthly or one-time gesture provides immediate nutrition, education resources, and basic survival shelter dignity. Secure payments are encrypted.
+            </p>
+            
+            <div class="inline-flex flex-wrap items-center justify-center gap-4 pt-4">
+                <button onclick="initiatePaymentFromMain(500)" class="bg-[#D97706] hover:bg-[#B45309] text-white font-bold px-8 py-4 rounded-xl text-lg shadow-xl transition transform hover:-translate-y-0.5 flex items-center group">
+                    <i class="fa-solid fa-credit-card mr-3 text-base"></i> PAY ONLINE NOW
+                    <i class="fa-solid fa-arrow-right ml-2 text-xs opacity-0 group-hover:opacity-100 transition duration-200"></i>
+                </button>
+            </div>
+            
+            <div class="flex items-center justify-center space-x-6 pt-4 text-xs text-stone-500 font-mono">
+                <span><i class="fa-solid fa-lock text-emerald-500 mr-1"></i> Secured PCI-DSS Pipeline</span>
+                <span><i class="fa-solid fa-building-columns text-emerald-500 mr-1"></i> Direct Bank Transfer/UPI</span>
+            </div>
+        </div>
+    </section>
+
+    <section id="report-need" class="max-w-4xl mx-auto px-6 py-20 text-center">
+        <div class="bg-red-50 border border-red-100 p-12 rounded-3xl space-y-6 shadow-sm">
+            <h2 class="text-3xl font-bold text-red-700">See someone in need?</h2>
+            <p class="text-stone-600 text-lg max-w-2xl mx-auto leading-relaxed">
+                If you encounter food scarcity or a child in distress, please report it immediately. 
+                Your information helps our field agents provide rapid assistance.
+            </p>
+            <a href="report-need.html" class="inline-block bg-red-600 text-white font-bold px-10 py-4 rounded-xl hover:bg-red-700 transition shadow-xl hover:scale-105 duration-200">
+                <i class="fa-solid fa-triangle-exclamation mr-2"></i> Report a Need Now
+            </a>
+        </div>
+    </section>
+
+    <footer class="bg-stone-950 text-stone-400 py-12 px-6 text-sm border-t border-stone-900">
+        <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 items-center gap-8 text-center md:text-left">
+            <div>
+                <p class="font-semibold text-white text-base mb-1">Mana Vivekam Foundation</p>
+                <p class="text-stone-500 text-xs">Registered NGO & Community Welfare Platform.</p>
+            </div>
+            <div class="md:text-center text-stone-500 text-xs space-y-1">
+                <p><strong>Founders:</strong> Mana Vivekam Core Management Council</p>
+                <p>© 2026 Mana Vivekam Foundation. Built for absolute accountability.</p>
+            </div>
+            <div class="md:text-right text-xs">
+                <p class="text-stone-500"><strong>Designed Studio Concept:</strong> Wireframe Map Layout</p>
+                <p class="text-stone-600 mt-1">Responsive HTML & Tailwind System Blueprint</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Registration Modal -->
+    <div id="registerModal" class="fixed inset-0 bg-stone-900/50 backdrop-blur-sm hidden flex items-center justify-center z-[100] p-4">
+        <div class="bg-white rounded-3xl w-full max-w-md p-8 shadow-2xl">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-stone-800">Donor Registration</h2>
+                <button onclick="toggleRegisterModal()" class="text-stone-400 hover:text-stone-600"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <form id="registerForm" class="space-y-4">
+                <div id="regError" class="bg-red-50 text-red-700 p-3 rounded-lg text-sm hidden border border-red-100"></div>
+                <div>
+                    <label class="block text-xs font-bold text-stone-500 mb-1 uppercase tracking-wider">Username</label>
+                    <input type="text" id="regUsername" required class="w-full px-4 py-3 rounded-xl border border-stone-200 focus:ring-2 focus:ring-[#A34A38]/50 focus:border-[#A34A38] outline-none transition">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-stone-500 mb-1 uppercase tracking-wider">Phone Number</label>
+                    <input type="tel" id="regPhone" required placeholder="10-digit number" class="w-full px-4 py-3 rounded-xl border border-stone-200 focus:ring-2 focus:ring-[#A34A38]/50 focus:border-[#A34A38] outline-none transition">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-stone-500 mb-1 uppercase tracking-wider">Password</label>
+                    <input type="password" id="regPassword" required class="w-full px-4 py-3 rounded-xl border border-stone-200 focus:ring-2 focus:ring-[#A34A38]/50 focus:border-[#A34A38] outline-none transition">
+                </div>
+                <button type="submit" id="regSubmitBtn" class="w-full bg-[#A34A38] text-white font-bold py-4 rounded-xl hover:bg-[#82392B] transition shadow-lg shadow-orange-900/20 mt-2">
+                    Create Donor Account
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+
+        // --- Reality Check: Ensure we are on the correct server port ---
+        if (window.location.port !== '5000' && window.location.hostname === 'localhost') {
+            alert("⚠️ WARNING: You are on the wrong port (" + window.location.port + ").\n\nThe API is running on port 5000.\n\nPlease visit: http://localhost:5000/index.html");
+        }
+
+        const RAZORPAY_KEY_ID = 'rzp_test_Stf9IV60v0Uh2i';
+
+        async function initiatePaymentFromMain(amount) {
+            const btn = document.querySelector('#donate button');
+            const originalText = btn ? btn.innerHTML : null;
+            
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Initializing...';
+            }
+
+            const donorName = "Anonymous Donor";
+            const options = {
+                "key": RAZORPAY_KEY_ID,
+                "amount": amount * 100,
+                "currency": "INR",
+                "name": "Mana Vivekam Foundation",
+                "description": "Secure Real-time Donation",
+                "handler": async function (response) {
+                    if (btn) btn.innerHTML = '<i class="fa-solid fa-check mr-2"></i> Success';
+                    const token = localStorage.getItem('token');
+                    try {
+                        await fetch('/api/donate', {
+                            method: 'POST',
+                            headers: { 
+                                'Content-Type': 'application/json',
+                                ...(token && { 'Authorization': `Bearer ${token}` })
+                            },
+                            body: JSON.stringify({ 
+                                amount, 
+                                donorName, 
+                                donorEmail: 'anonymous@example.com',
+                                razorpay_payment_id: response.razorpay_payment_id 
+                            })
+                        });
+                        alert('Payment Successful!');
+                        window.location.href = token ? 'donor-dashboard.html' : 'login.html';
+                    } catch (e) {
+                        window.location.href = 'login.html';
+                    }
+                },
+                "modal": {
+                    "ondismiss": function() {
+                        if (btn) {
+                            btn.disabled = false;
+                            btn.innerHTML = originalText;
+                        }
+                    }
+                },
+                "theme": { "color": "#A34A38" }
+            };
+            const rzp = new Razorpay(options);
+            rzp.open();
+        }
+
+
+        function getDashboardUrl(role) {
+            const routes = {
+                'admin': '/admin-dashboard.html',
+                'anadhasaranalayam': '/orphanage-portal.html',
+                'agent': '/agent-tasks.html',
+                'hotel': '/food-donator.html',
+                'donator': '/donor-dashboard.html'
+            };
+            return routes[role] || 'login.html';
+        }
+
+        function toggleRegisterModal() {
+            const modal = document.getElementById('registerModal');
+            modal.classList.toggle('hidden');
+            if (!modal.classList.contains('hidden')) {
+                document.getElementById('regError').classList.add('hidden');
+                document.getElementById('registerForm').reset();
+            }
+        }
+
+        document.getElementById('registerForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('regSubmitBtn');
+            const errDiv = document.getElementById('regError');
+            
+            const userData = {
+                username: document.getElementById('regUsername').value,
+                contactNumber: document.getElementById('regPhone').value,
+                password: document.getElementById('regPassword').value
+            };
+
+            btn.disabled = true;
+            btn.innerText = 'Registering...';
+            errDiv.classList.add('hidden');
+
+            try {
+                const res = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(userData)
+                });
+                const data = await res.json();
+                
+                if (res.ok) {
+                    alert('Registration Successful! You can now login.');
+                    toggleRegisterModal();
+                    window.location.href = 'login.html';
+                } else {
+                    errDiv.innerText = data.message || 'Registration failed';
+                    errDiv.classList.remove('hidden');
+                }
+            } catch (err) {
+                console.error(err);
+                errDiv.innerText = 'Connection error. Please try again.';
+                errDiv.classList.remove('hidden');
+            } finally {
+                btn.disabled = false;
+                btn.innerText = 'Create Donor Account';
+            }
+        };
+
+        // --- Initial Load ---
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // --- Latest Uploads (Transparency Photos) ---
+            async function loadLatestUploads() {
+                const grid = document.getElementById('uploadsGrid');
+                const loading = document.getElementById('uploadsLoading');
+                if (!grid) return;
+                try { // Using relative path
+                    const response = await fetch('/api/reports');
+                    const uploads = await response.json();
+                    if (loading) loading.style.display = 'none';
+                    grid.innerHTML = (uploads || []).map(u => `
+                        <div class="bg-white rounded-2xl shadow-xs border border-stone-200/60 overflow-hidden hover:shadow-xl transition duration-300">
+                            <div class="relative h-56 bg-stone-100 overflow-hidden">
+                                <img src="${u.imageUrl}" alt="${u.title}" class="w-full h-full object-cover" />
+                            </div>
+                            <div class="p-6">
+                                <h3 class="text-lg font-bold text-stone-800">${u.title || 'Field Audit'}</h3>
+                                <p class="text-sm text-stone-600 line-clamp-2">${u.description || ''}</p>
+                            </div>
+                        </div>
+                    `).join('') || '<p class="text-stone-500 text-center col-span-3">No photos yet.</p>';
+                } catch (err) { console.error(err); }
+            }
+
+            loadLatestUploads();
+
+            // --- Donor Wall Loading ---
+            async function loadDonors() {
+                const wall = document.getElementById('donorWall');
+                try {
+                    const res = await fetch('/api/public/donors');
+                    const donors = await res.json();
+                    wall.innerHTML = donors.map(d => `
+                        <div class="bg-[#FAF6F0] p-4 rounded-2xl text-center border border-orange-100 shadow-sm">
+                            <div class="w-12 h-12 bg-[#A34A38] text-white rounded-full flex items-center justify-center mx-auto mb-3 font-bold text-lg">${d.donorName.charAt(0)}</div>
+                            <h4 class="font-bold text-stone-800 text-sm truncate">${d.donorName}</h4>
+                            <p class="text-[10px] text-emerald-600 font-bold">₹${d.amount} Gifted</p>
+                        </div>
+                    `).join('') || '<p class="col-span-full text-center text-stone-400">Be the first to support us!</p>';
+                } catch (e) { console.error(e); }
+            }
+            loadDonors();
+
+            // --- Verified Agents Loading ---
+            async function loadVerifiedAgents() {
+                const gallery = document.getElementById('agentGallery');
+                try {
+                    const res = await fetch('/api/public/verified-agents');
+                    const agents = await res.json();
+                    if (agents.length === 0) {
+                        gallery.innerHTML = '<p class="col-span-full text-center text-stone-400 italic py-10">Field verification teams are being onboarded. Check back soon!</p>';
+                        return;
+                    }
+                    gallery.innerHTML = agents.map(a => `
+                        <div class="bg-white p-6 rounded-[2rem] text-center border-2 border-emerald-50 shadow-sm hover:shadow-md transition group relative overflow-hidden">
+                            <div class="absolute top-0 right-0 p-3">
+                                <i class="fa-solid fa-certificate text-emerald-500 text-lg shadow-sm"></i>
+                            </div>
+                            <div class="w-20 h-20 bg-stone-100 rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-white shadow-md overflow-hidden">
+                                ${a.profileImage ? `<img src="${a.profileImage}" class="w-full h-full object-cover">` : `<i class="fa-solid fa-user-ninja text-3xl text-stone-300"></i>`}
+                            </div>
+                            <h4 class="font-black text-stone-900 text-sm group-hover:text-[#A34A38] transition truncate w-full px-2">${a.name}</h4>
+                            <p class="text-[9px] font-black text-emerald-600 uppercase tracking-widest mt-1">Verified Agent</p>
+                            <div class="mt-4 pt-3 border-t border-stone-50 flex justify-between items-center text-[10px] font-bold text-stone-400 uppercase">
+                                <span>Impact</span>
+                                <span class="text-stone-900">${a.completedCount} Deliveries</span>
+                            </div>
+                        </div>
+                    `).join('');
+                } catch (e) { 
+                    console.error(e); 
+                    gallery.innerHTML = '<p class="col-span-full text-center text-red-400 italic">Error loading verification gallery.</p>';
+                }
+            }
+            loadVerifiedAgents();
+
+            let allOrphanages = [];
+
+            // --- Orphanage List Loading ---
+            async function loadOrphanages() {
+                try {
+                    const res = await fetch('/api/orphanages');
+                    allOrphanages = await res.json();
+                    renderOrphanages(allOrphanages);
+                } catch (e) { console.error(e); }
+            }
+
+            function filterOrphanages() {
+                const query = document.getElementById('orphanageSearch').value.toLowerCase();
+                const filtered = allOrphanages.filter(o => 
+                    (o.name || '').toLowerCase().includes(query) || 
+                    (o.location || '').toLowerCase().includes(query) ||
+                    (o.id ? o.id.toString() : '').includes(query)
+                );
+                renderOrphanages(filtered);
+            }
+
+            function renderOrphanages(data) {
+                const list = document.getElementById('orphanageList');
+                if (!list) return;
+                list.innerHTML = data.map(o => `
+                    <div class="bg-white p-5 rounded-xl border border-stone-200/70 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:border-orange-200 transition shadow-xs">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-12 h-12 bg-[#A34A38]/5 rounded-lg flex items-center justify-center text-xl text-[#A34A38] shrink-0"><i class="fa-solid fa-hotel"></i></div>
+                            <div>
+                                <h4 class="font-bold text-stone-800 text-base">${o.name || 'Anonymous Home'}</h4>
+                                <p class="text-xs text-stone-500"><i class="fa-solid fa-location-dot mr-1 text-[#A34A38]"></i> ${o.location || 'Unknown Location'} • ${o.childrenCount || 0} Children</p>
+                            </div>
+                        </div>
+                        <button onclick="location.href='#stories'" class="bg-[#A34A38]/10 text-[#A34A38] text-xs font-bold px-4 py-2.5 rounded-lg hover:bg-[#A34A38] hover:text-white transition shrink-0">View Audit Reports</button>
+                    </div>
+                `).join('') || '<p class="text-stone-400 text-sm italic">No homes match your search criteria.</p>';
+            }
+
+            window.filterOrphanages = filterOrphanages;
+            loadOrphanages();
+
+            const token = localStorage.getItem('token');
+            const role = localStorage.getItem('role');
+            const loginLink = document.getElementById('loginLink');
+            
+            if (token && role && loginLink) {
+                loginLink.innerHTML = `<i class="fa-solid fa-user-shield mr-1.5"></i>Dashboard`;
+                loginLink.classList.add('text-[#A34A38]');
+                loginLink.href = getDashboardUrl(role);
+
+                const registerLink = document.getElementById('registerLink');
+                if (registerLink) registerLink.classList.add('hidden');
+                
+                const logoutBtn = document.createElement('button');
+                logoutBtn.innerHTML = '<i class="fa-solid fa-power-off ml-3"></i>';
+                logoutBtn.className = "text-stone-400 hover:text-rose-600 transition text-sm";
+                logoutBtn.title = "Logout";
+                logoutBtn.onclick = () => {
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('role');
+                    window.location.reload();
+                };
+                loginLink.after(logoutBtn);
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Report a Need - Mana Vivekam Foundation</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Noto+Sans+Telugu:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', 'Noto Sans Telugu', sans-serif;
+            background-color: #FAF6F0;
+        }
+    </style>
+</head>
+<body class="text-stone-800">
+
+    <header class="bg-[#FFFDF9] border-b border-orange-100 shadow-sm py-4">
+        <div class="max-w-7xl mx-auto px-6 flex justify-between items-center">
+            <a href="index.html" class="flex items-center space-x-2">
+                <span class="text-2xl text-[#A34A38]"><i class="fa-solid fa-hands-holding-child"></i></span>
+                <span class="text-xl font-bold tracking-tight text-[#A34A38]">Mana Vivekam</span>
+            </a>
+            <a href="index.html" class="text-stone-600 hover:text-[#A34A38] font-medium transition text-sm">
+                <i class="fa-solid fa-arrow-left mr-1.5"></i>Back to Home
+            </a>
+        </div>
+    </header>
+
+
+  <main class="max-w-5xl mx-auto px-6 py-16">
+    <div class="bg-white p-8 rounded-2xl shadow-xl border border-red-100 mb-12">
+      <h2 class="text-2xl font-bold mb-4 text-red-700 text-center">Report a Need or Child in Distress</h2>
+      <form id="publicAlertForm" class="space-y-6">
+        <div>
+          <label for="alertType" class="block text-sm font-semibold text-stone-700 mb-2">Type of Alert</label>
+          <select id="alertType" name="type" required class="w-full px-4 py-3 rounded-xl border border-stone-300 focus:ring-2 focus:ring-red-500 focus:outline-none transition">
+            <option value="">Select an option</option>
+            <option value="food_scarcity">Food Scarcity</option>
+            <option value="child_in_need">Child in Need</option>
+            <option value="other_distress">Other Distress</option>
+          </select>
+        </div>
+        <div>
+          <label for="alertDescription" class="block text-sm font-semibold text-stone-700 mb-2">Description of Situation</label>
+          <textarea id="alertDescription" name="description" rows="4" required placeholder="Provide details about the situation, location, and number of people affected." class="w-full px-4 py-3 rounded-xl border border-stone-300 focus:ring-2 focus:ring-red-500 focus:outline-none transition"></textarea>
+        </div>
+        <div>
+          <label for="alertImage" class="block text-sm font-semibold text-stone-700 mb-2">Upload Photo (Optional)</label>
+          <input type="file" id="alertImage" name="image" accept="image/*" class="w-full text-sm text-stone-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-red-50 file:text-red-700 hover:file:bg-red-100"/>
+        </div>
+        <div>
+          <label for="contactInfo" class="block text-sm font-semibold text-stone-700 mb-2">Your Contact Info (Optional)</label>
+          <input type="text" id="contactInfo" name="contactInfo" placeholder="Name, Phone, or Email" class="w-full px-4 py-3 rounded-xl border border-stone-300 focus:ring-2 focus:ring-red-500 focus:outline-none transition">
+        </div>
+        <button type="submit" class="w-full bg-red-600 text-white font-bold py-3.5 rounded-xl hover:bg-red-700 transition shadow-lg flex items-center justify-center">
+          <i class="fa-solid fa-triangle-exclamation mr-2"></i> <span id="submitAlertText">Submit Alert</span>
+        </button>
+      </form>
+    </div>
+
+    <h2 class="text-xl font-bold mb-4 text-red-700">Submitted Alerts</h2>
+    <table id="alertsTable" class="min-w-full border-collapse border border-gray-200 shadow-md rounded-lg overflow-hidden">
+      <thead class="bg-red-600 text-white text-left">
+        <tr>
+          <th class="px-4 py-2">ID</th>
+          <th class="px-4 py-2">Type</th>
+          <th class="px-4 py-2">Description</th>
+          <th class="px-4 py-2">Contact</th>
+          <th class="px-4 py-2">Photo</th>
+          <th class="px-4 py-2">Date</th>
+          <th class="px-4 py-2">Status</th>
+        </tr>
+      </thead>
+      <tbody id="alertsBody"></tbody>
+    </table>
+  </main>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Check if page is served via HTTP (localhost) and not file://
+      if (window.location.protocol === 'file:') {
+        alert("CRITICAL: You are opening this file directly. Please access via the server URL (e.g., http://localhost:5000/report-need.html).");
+      }
+
+      const publicAlertForm = document.getElementById('publicAlertForm');
+      const submitAlertButton = publicAlertForm.querySelector('button[type="submit"]');
+      const submitAlertText = document.getElementById('submitAlertText');
+
+      publicAlertForm.onsubmit = async (e) => {
+        e.preventDefault();
+        const formData = new FormData();
+        formData.append('type', document.getElementById('alertType').value);
+        formData.append('description', document.getElementById('alertDescription').value);
+        formData.append('contactInfo', document.getElementById('contactInfo').value);
+        const imageFile = document.getElementById('alertImage').files[0];
+        if (imageFile) formData.append('image', imageFile);
+
+        submitAlertButton.disabled = true;
+        submitAlertText.textContent = 'Submitting...';
+
+        try {
+          const response = await fetch('/api/alerts', { method: 'POST', body: formData });
+          let result;
+          const contentType = response.headers.get("content-type");
+          if (contentType && contentType.includes("application/json")) {
+            result = await response.json();
+          } else {
+            const errorText = await response.text();
+            console.error("Server returned non-JSON response:", errorText);
+            throw new Error(`Server returned HTML instead of JSON. Status: ${response.status}. Check console for details.`);
+          }
+
+          if (response.ok) {
+            alert("Success! " + result.message);
+            publicAlertForm.reset();
+            loadAlerts();
+          } else {
+            alert("Error: " + (result.error || result.message));
+          }
+        } catch (err) {
+          console.error("Submission error:", err);
+          alert("Submission error: " + err.message);
+        } finally {
+          submitAlertButton.disabled = false;
+          submitAlertText.textContent = 'Submit Alert';
+        }
+      };
+
+      async function loadAlerts() {
+        try {
+          const res = await fetch('/api/alerts');
+          const alerts = await res.json();
+          const tbody = document.getElementById('alertsBody');
+          tbody.innerHTML = '';
+
+          alerts.forEach(alert => {
+            const row = document.createElement('tr');
+            row.className = 'border-b hover:bg-red-50';
+            row.innerHTML = `
+              <td class="px-4 py-2">${alert.id}</td>
+              <td class="px-4 py-2 font-semibold uppercase text-[10px] text-red-600">${alert.type.replace(/_/g, ' ')}</td>
+              <td class="px-4 py-2">${alert.description}</td>
+              <td class="px-4 py-2">${alert.contact || '—'}</td>
+              <td class="px-4 py-2">${alert.photo ? `<img src="/uploads/${alert.photo}" class="w-16 h-16 object-cover rounded-md">` : '—'}</td>
+              <td class="px-4 py-2">${alert.date}</td>
+              <td class="px-4 py-2"><span class="px-2 py-1 text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-700 rounded">${alert.status}</span></td>
+            `;
+            tbody.appendChild(row);
+          });
+        } catch (err) { console.error("Failed to load alerts:", err); }
+      }
+
+      loadAlerts();
+    });
+  </script>
+</body>
+</html>

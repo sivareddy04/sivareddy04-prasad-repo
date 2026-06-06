@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orphanage Portal - Mana Vivekam</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #FAF6F0; }
+    </style>
+</head>
+<body class="text-stone-800">
+    <header class="bg-[#A34A38] text-white py-4 px-6 flex justify-between items-center shadow-lg">
+        <div class="max-w-7xl mx-auto px-6 flex justify-between items-center">
+            <a href="index.html" class="flex items-center space-x-2">
+                <span class="text-2xl text-white"><i class="fa-solid fa-hands-holding-child"></i></span>
+                <span class="text-xl font-bold tracking-tight text-white">Orphanage Resource Portal</span>
+            </a>
+            <button onclick="toggleSettingsModal()" class="text-sm bg-[#82392B] px-4 py-2 rounded-lg hover:bg-stone-900 transition mr-2">
+                <i class="fa-solid fa-cog mr-2"></i>Settings
+            </button>
+            <button onclick="logout()" class="text-sm bg-[#82392B] px-4 py-2 rounded-lg hover:bg-stone-900 transition">Logout</button>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto p-6">
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
+                <p class="text-stone-500 text-xs font-bold uppercase tracking-wider mb-1">Total Requests</p>
+                <h3 id="statTotal" class="text-3xl font-bold text-stone-800">0</h3>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
+                <p class="text-stone-500 text-xs font-bold uppercase tracking-wider mb-1">Pending Approval</p>
+                <h3 id="statPending" class="text-3xl font-bold text-amber-600">0</h3>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
+                <p class="text-stone-500 text-xs font-bold uppercase tracking-wider mb-1">Approved (Active)</p>
+                <h3 id="statApproved" class="text-3xl font-bold text-blue-600">0</h3>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
+                <p class="text-stone-500 text-xs font-bold uppercase tracking-wider mb-1">Received (Done)</p>
+                <h3 id="statReceived" class="text-3xl font-bold text-emerald-600">0</h3>
+            </div>
+            <div class="bg-emerald-50 p-6 rounded-2xl border border-emerald-100 flex items-center justify-between sm:col-span-2 lg:col-span-1">
+                <div>
+                    <h3 id="profileName" class="font-bold text-emerald-900">Welcome!</h3>
+                    <p class="text-xs text-emerald-700">Manage your home details below.</p>
+                </div>
+                <button onclick="toggleProfileModal()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-sm">Edit Profile</button>
+            </div>
+        </div>
+
+        <div class="grid lg:grid-cols-3 gap-8">
+            <!-- Sidebar: Profile & Submit New Request -->
+            <aside class="lg:col-span-1 space-y-6">
+                <!-- Profile Overview Card -->
+                <div class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
+                    <div class="bg-[#A34A38] p-4 text-center">
+                        <div id="sideProfilePic" class="w-20 h-20 bg-white/20 text-white rounded-full flex items-center justify-center text-2xl font-bold shadow-inner mx-auto mb-3 overflow-hidden">
+                            <i class="fa-solid fa-building-ngo"></i>
+                        </div>
+                        <h2 id="sideFoundationName" class="text-lg font-bold text-white truncate">Loading...</h2>
+                        <div class="flex items-center justify-center space-x-2 mt-1">
+                            <span class="text-[8px] bg-white/20 text-white px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">Foundation</span>
+                            <span class="text-[10px] text-orange-200 font-mono" id="sideUsername">@username</span>
+                        </div>
+                    </div>
+                    <div class="p-6 space-y-4 text-xs">
+                        <div class="flex items-center text-stone-600">
+                            <i class="fa-solid fa-location-dot w-5 text-stone-400"></i>
+                            <span id="sideLocation" class="truncate">...</span>
+                        </div>
+                        <div class="flex items-center text-stone-600">
+                            <i class="fa-solid fa-users w-5 text-stone-400"></i>
+                            <span class="font-bold mr-1" id="sideChildrenCount">0</span> Children Registered
+                        </div>
+                        <div class="flex items-center text-stone-600">
+                            <i class="fa-solid fa-phone w-5 text-stone-400"></i>
+                            <span id="sideContact">...</span>
+                        </div>
+                        <div id="sideGpsStatus" class="flex items-center text-emerald-600 hidden font-bold">
+                            <i class="fa-solid fa-location-crosshairs w-5"></i>
+                            GPS: <span id="sideCoords" class="ml-1"></span>
+                        </div>
+                        <div class="flex items-center text-stone-500 pt-2 border-t border-stone-50">
+                            <i class="fa-solid fa-clock w-5 text-stone-300"></i>
+                            Last Login: <span id="sideLastLogin" class="ml-1">...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-200 sticky top-24">
+                    <h2 class="text-xl font-bold mb-6 text-[#A34A38]"><i class="fa-solid fa-plus-circle mr-2"></i>Submit New Need</h2>
+                    <form id="newRequestForm" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-stone-700 mb-1">Item Needed (వస్తువు పేరు)</label>
+                            <input type="text" id="reqItem" required placeholder="e.g., Rice Bags, Notebooks" class="w-full px-4 py-3 rounded-xl border border-stone-300 focus:ring-2 focus:ring-[#A34A38] focus:outline-none transition mb-2">
+                            <div class="flex flex-wrap gap-2">
+                                <button type="button" onclick="setNeed('Rice Bags')" class="text-[10px] font-bold bg-[#A34A38]/10 text-[#A34A38] px-2 py-1 rounded-full hover:bg-[#A34A38] hover:text-white transition">Rice Bags</button>
+                                <button type="button" onclick="setNeed('Notebooks')" class="text-[10px] font-bold bg-[#A34A38]/10 text-[#A34A38] px-2 py-1 rounded-full hover:bg-[#A34A38] hover:text-white transition">Notebooks</button>
+                                <button type="button" onclick="setNeed('Milk / Groceries')" class="text-[10px] font-bold bg-[#A34A38]/10 text-[#A34A38] px-2 py-1 rounded-full hover:bg-[#A34A38] hover:text-white transition">Groceries</button>
+                                <button type="button" onclick="setNeed('Blankets')" class="text-[10px] font-bold bg-[#A34A38]/10 text-[#A34A38] px-2 py-1 rounded-full hover:bg-[#A34A38] hover:text-white transition">Blankets</button>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-stone-700 mb-1">Quantity (Number)</label>
+                                <input type="number" id="reqNumericQty" required placeholder="e.g. 30" class="w-full px-4 py-3 rounded-xl border border-stone-300 focus:ring-2 focus:ring-[#A34A38] focus:outline-none transition">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-stone-700 mb-1">Unit</label>
+                                <select id="reqUnit" class="w-full px-4 py-3 rounded-xl border border-stone-300 focus:ring-2 focus:ring-[#A34A38] focus:outline-none transition">
+                                    <option value="kg">Kilograms (kg)</option>
+                                    <option value="liters">Liters (L)</option>
+                                    <option value="packets">Packets</option>
+                                    <option value="units">Units/Pieces</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-stone-700 mb-1">For (Children)</label>
+                            <input type="number" id="reqServes" required placeholder="e.g., 40" class="w-full px-4 py-3 rounded-xl border border-stone-300 focus:ring-2 focus:ring-[#A34A38] focus:outline-none transition">
+                        </div>
+                        <div>
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="block text-sm font-semibold text-stone-700">Delivery/Drop-off Address</label>
+                                <button type="button" onclick="fetchLiveLocation(event, 'reqAddress')" class="text-[10px] text-[#A34A38] font-bold hover:underline">
+                                    <i class="fa-solid fa-location-crosshairs mr-1"></i>Get Live Location
+                                </button>
+                            </div>
+                            <textarea id="reqAddress" required placeholder="Full delivery address or use live location..." class="w-full px-4 py-3 rounded-xl border border-stone-300 focus:ring-2 focus:ring-[#A34A38] focus:outline-none transition h-20"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-stone-700 mb-1">Reason/Description</label>
+                            <textarea id="reqDesc" rows="3" required placeholder="Briefly explain the urgency..." class="w-full px-4 py-3 rounded-xl border border-stone-300 focus:ring-2 focus:ring-[#A34A38] focus:outline-none transition"></textarea>
+                        </div>
+                        <div class="bg-red-50 p-3 rounded-xl border border-red-100">
+                            <label class="flex items-center space-x-2 cursor-pointer">
+                                <input type="checkbox" id="reqIsUrgent" class="w-4 h-4 rounded text-red-600 focus:ring-red-500 border-red-300">
+                                <span class="text-sm font-bold text-red-700">Mark as URGENT (వెంటనే అవసరం)</span>
+                            </label>
+                        </div>
+                        <button type="submit" class="w-full bg-[#A34A38] text-white font-bold py-3.5 rounded-xl hover:bg-[#82392B] transition shadow-lg">
+                            Submit Request
+                        </button>
+                    </form>
+                </div>
+            </aside>
+
+            <section class="lg:col-span-2">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-200 overflow-hidden min-h-[600px]">
+                    <h2 class="text-2xl font-bold mb-6 text-stone-800 flex justify-between items-center">
+                        <span>Request Tracking</span>
+                        <button onclick="loadRequests()" class="text-xs bg-stone-100 px-3 py-1.5 rounded-md hover:bg-stone-200 transition text-stone-500">
+                            <i class="fa-solid fa-rotate mr-1"></i> Refresh
+                        </button>
+                    </h2>
+
+                    <div class="mb-6">
+                        <div class="relative">
+                            <input type="text" id="reqSearch" onkeyup="filterRequests()" placeholder="Search by item, quantity or status..." class="w-full bg-stone-50 pl-11 pr-4 py-3 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#A34A38]/30 transition text-sm">
+                            <i class="fa-solid fa-magnifying-glass absolute left-4 top-4 text-stone-400"></i>
+                        </div>
+                    </div>
+
+                    <div id="incomingOffers" class="mb-10 hidden">
+                        <h2 class="text-xl font-black text-stone-900 mb-4 flex items-center">
+                            <span class="w-2 h-2 bg-blue-600 rounded-full mr-2 animate-ping"></span>
+                            Available Food Offers Nearby
+                        </h2>
+                        <div id="offersList" class="grid sm:grid-cols-2 gap-4">
+                            <!-- Dynamic Offer Cards -->
+                        </div>
+                        <div class="h-px bg-stone-100 my-8"></div>
+                    </div>
+
+                    <div id="requestsList" class="grid gap-4">
+                        <div class="animate-pulse flex space-x-4">
+                            <div class="flex-1 space-y-4 py-1">
+                                <div class="h-4 bg-stone-200 rounded w-3/4"></div>
+                                <div class="space-y-2"><div class="h-4 bg-stone-200 rounded"></div></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="noRequests" class="hidden text-center py-20">
+                        <div class="text-stone-300 text-6xl mb-4"><i class="fa-solid fa-clipboard-question"></i></div>
+                        <p class="text-stone-500">No requests submitted yet.</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Profile Modal -->
+    <div id="profileModal" class="fixed inset-0 bg-stone-900/50 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-3xl w-full max-w-lg shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
+            <div class="p-8 pb-4 border-b border-stone-100 flex justify-between items-center">
+                <h2 class="text-xl font-bold text-stone-800">Update Home Details</h2>
+                <button onclick="toggleProfileModal()" class="text-stone-400 hover:text-stone-600"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-8 pt-4 overflow-y-auto">
+            <form id="profileForm" class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <input type="hidden" id="profLat">
+                    <input type="hidden" id="profLon">
+                    <div class="col-span-2">
+                        <label class="block text-xs font-bold text-stone-500 mb-1">USERNAME*</label>
+                        <input type="text" id="profUsername" required class="w-full px-4 py-2 border rounded-xl outline-none">
+                    </div>
+                    <div class="col-span-2">
+                        <label class="block text-xs font-bold text-stone-500 mb-1">PASSWORD</label>
+                        <input type="password" id="profPassword" class="w-full px-4 py-2 border rounded-xl outline-none" placeholder="Required for new users">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-stone-500 mb-1">ROLE*</label>
+                        <select id="profRole" required class="w-full px-4 py-2 border rounded-xl outline-none">
+                            <option value="anadhasaranalayam">Orphanage</option>
+                            <option value="donator">Donor</option>
+                            <option value="agent">Agent</option>
+                            <option value="hotel">Hotel</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-stone-500 mb-1">STATUS</label>
+                        <select id="profStatus" required class="w-full px-4 py-2 border rounded-xl outline-none">
+                            <option value="approved">Approved / Active</option>
+                            <option value="pending">Pending Review</option>
+                            <option value="rejected">Rejected</option>
+                        </select>
+                    </div>
+                    <div class="col-span-2">
+                        <label class="block text-xs font-bold text-stone-500 mb-1">DISPLAY NAME</label>
+                        <input type="text" id="profDisplayName" required class="w-full px-4 py-2 border rounded-xl">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-stone-500 mb-1">LOCATION (CITY)</label>
+                        <input type="text" id="profLocation" required class="w-full px-4 py-2 border rounded-xl">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-stone-500 mb-1">CHILDREN COUNT</label>
+                        <input type="number" id="profChildren" required min="0" class="w-full px-4 py-2 border rounded-xl">
+                    </div>
+                    <div class="col-span-2">
+                        <label class="block text-xs font-bold text-stone-500 mb-1">CONTACT NUMBER</label>
+                        <input type="text" id="profPhone" required class="w-full px-4 py-2 border rounded-xl">
+                    </div>
+                    <div class="col-span-2">
+                        <label class="block text-xs font-bold text-stone-500 mb-1">PROFILE IMAGE</label>
+                        <input type="file" id="profImage" accept="image/*" class="w-full text-sm text-stone-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#A34A38]/10 file:text-[#A34A38] hover:file:bg-[#A34A38]/20">
+                    </div>
+                    <div class="col-span-2">
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="block text-xs font-bold text-stone-500">BIO / FOUNDATION DETAILS (వివరణ)</label>
+                            <span id="bioCharCount" class="text-[10px] text-stone-400">0/500</span>
+                        </div>
+                        <textarea id="profBio" maxlength="500" oninput="updateBioCount()" class="w-full px-4 py-2 border rounded-xl h-20" placeholder="Briefly describe your foundation's mission..."></textarea>
+                    </div>
+                    <div class="col-span-2">
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="block text-xs font-bold text-stone-500">ADDRESS / LOCATION</label>
+                            <button type="button" onclick="fetchLiveLocation(event)" class="text-[10px] text-[#A34A38] font-bold hover:underline">
+                                <i class="fa-solid fa-location-crosshairs mr-1"></i>Get Live Location
+                            </button>
+                        </div>
+                        <textarea id="profAddress" class="w-full px-4 py-2 border rounded-xl h-20"></textarea>
+                    </div>
+                    <div class="col-span-2 bg-[#A34A38]/5 p-4 rounded-2xl border border-[#A34A38]/10 flex items-center justify-between">
+                        <div>
+                            <label class="block text-xs font-bold text-[#A34A38]">Enable Public Location Access</label>
+                            <p class="text-[10px] text-stone-500 italic">When enabled, donors can find your home on the map.</p>
+                        </div>
+                        <input type="checkbox" id="profLocEnabled" class="w-5 h-5 accent-[#A34A38]">
+                    </div>
+                </div>
+            </form>
+            </div>
+            <div class="p-8 pt-4 border-t border-stone-100 flex space-x-3">
+                <button type="button" onclick="toggleProfileModal()" class="flex-1 py-3 text-stone-500 font-bold hover:bg-stone-50 rounded-xl transition">Cancel</button>
+                <button type="submit" id="profSaveBtn" form="profileForm" class="flex-1 py-3 bg-[#A34A38] text-white rounded-xl font-bold shadow-lg flex items-center justify-center hover:bg-[#82392B] transition">
+                    <i class="fa-solid fa-floppy-disk mr-2"></i> Save User
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="fixed inset-0 bg-stone-900/50 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-3xl w-full max-w-md p-8 shadow-2xl">
+            <h2 class="text-2xl font-bold text-stone-800 mb-6">Settings</h2>
+            <div class="space-y-6">
+                <div class="flex items-center justify-between p-4 bg-stone-50 rounded-2xl border border-stone-100">
+                    <div>
+                        <p class="font-bold text-stone-800">Location Services</p>
+                        <p class="text-xs text-stone-500">Enable live location sharing for better visibility.</p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="settingLocEnabled" class="sr-only peer" onchange="updateLocationSetting(this.checked)">
+                        <div class="w-11 h-6 bg-stone-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#A34A38]"></div>
+                    </label>
+                </div>
+                <button onclick="toggleSettingsModal()" class="w-full py-3 text-stone-500 font-bold hover:bg-stone-50 rounded-xl transition">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Live Tracking Modal (Role Connection Upgrade) -->
+    <div id="trackingModal" class="fixed inset-0 bg-stone-900/60 backdrop-blur-sm hidden flex items-center justify-center z-[200] p-4">
+        <div class="bg-white rounded-[2rem] w-full max-w-2xl shadow-2xl flex flex-col h-[80vh] overflow-hidden border border-stone-100">
+            <div class="p-6 border-b border-stone-100 flex justify-between items-center">
+                <div>
+                    <h2 class="text-xl font-black text-stone-900 uppercase tracking-tight">Agent In-Transit</h2>
+                    <p id="trackingAgentName" class="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Real-time GPS Monitoring</p>
+                </div>
+                <button onclick="closeTrackingModal()" class="text-stone-300 hover:text-stone-900 transition cursor-pointer"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="flex-1 relative bg-stone-50">
+                <div id="trackingMapDiv" class="h-full w-full"></div>
+                <button id="recenterBtn" onclick="recenterOnAgent()" class="absolute bottom-6 right-6 z-[1000] hidden bg-blue-600 text-white px-5 py-2.5 rounded-full font-black text-[10px] uppercase tracking-widest shadow-xl hover:bg-blue-700 transition flex items-center space-x-2">
+                    <i class="fa-solid fa-location-crosshairs"></i>
+                    <span>Snap to Agent</span>
+                </button>
+            </div>
+            <div class="p-6 bg-white border-t border-stone-50 grid grid-cols-2 gap-4">
+                <div class="bg-stone-50 p-4 rounded-2xl border border-stone-100">
+                    <p class="text-[9px] font-black text-stone-400 uppercase tracking-[0.2em] mb-1">Current Status</p>
+                    <p id="trackStatusLabel" class="text-sm font-black text-blue-600 uppercase">Incoming</p>
+                </div>
+                <div class="bg-stone-50 p-4 rounded-2xl border border-stone-100">
+                    <p class="text-[9px] font-black text-stone-400 uppercase tracking-[0.2em] mb-1">Estimated Arrival</p>
+                    <p id="trackDistLabel" class="text-sm font-black text-stone-900">-- km away</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-stone-900 text-white px-6 py-3 rounded-full shadow-2xl transform translate-y-20 opacity-0 transition-all duration-500 z-[100] flex items-center space-x-2 pointer-events-none">
+        <i class="fa-solid fa-circle-check text-emerald-400"></i>
+        <span id="toastMessage">Success!</span>
+    </div>
+
+    <script>
+        let allRequests = [];
+        let toastTimeout;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('token');
+            const role = localStorage.getItem('role');
+
+            if (!token || role !== 'anadhasaranalayam') {
+                window.location.href = 'login.html';
+                return;
+            }
+            loadRequests();
+            loadProfileAndStats();
+            loadOffers();
+        });
+        async function loadOffers() {
+            try {
+                const res = await fetch('/api/orphanage/incoming-offers', {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+                const data = await res.json();
+                const container = document.getElementById('offersList');
+                const section = document.getElementById('incomingOffers');
+                if (data.length > 0) {
+                    section.classList.remove('hidden');
+                    container.innerHTML = data.map(o => `
+                        <div class="p-5 rounded-3xl border-2 border-blue-100 bg-blue-50/30 shadow-sm flex flex-col justify-between">
+                            <div>
+                                <h4 class="font-black text-stone-900 text-sm">${o.foodItem}</h4>
+                                <p class="text-[10px] text-stone-400 font-bold uppercase tracking-widest mt-0.5">${o.quantity}</p>
+                                <p class="text-xs text-blue-600 font-bold mt-2"><i class="fa-solid fa-truck mr-1"></i> Agent ${o.agentName} is carrying this nearby.</p>
+                            </div>
+                            <button onclick="claimOffer(${o.id})" class="mt-4 w-full py-2.5 bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-blue-700 transition active:scale-95 shadow-lg shadow-blue-600/20">Accept This Food</button>
+                        </div>
+                    `).join('');
+                } else { section.classList.add('hidden'); }
+            } catch (e) { console.error(e); }
+        }
+
+        async function claimOffer(id) {
+            const res = await fetch(`/api/orphanage/claim-offer/${id}`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            });
+            if (res.ok) { alert('Handover initiated! Agent will arrive at your address.'); loadOffers(); }
+        }
+
+        async function loadProfileAndStats() {
+            const token = localStorage.getItem('token');
+            try {
+                const [profRes, statsRes] = await Promise.all([
+                    fetch('/api/orphanage/profile', { 
+                        headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' } 
+                    }),
+                    fetch('/api/orphanage/stats', { 
+                        headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' } 
+                    })
+                ]);
+                
+                if (!profRes.ok || !statsRes.ok) {
+                    if (profRes.status === 401) window.location.href = 'login.html';
+                    throw new Error("Failed to load profile or stats");
+                }
+
+                const profile = await profRes.json();
+                const stats = await statsRes.json();
+
+                if (!profile || !stats) return;
+
+                document.getElementById('profileName').innerText = `Welcome, ${profile.displayName || profile.username}!`;
+                document.getElementById('statTotal').innerText = stats.totalRequests;
+                document.getElementById('statPending').innerText = stats.pendingRequests;
+                document.getElementById('statApproved').innerText = stats.approvedRequests || 0;
+                document.getElementById('statReceived').innerText = stats.receivedRequests;
+
+                // Update Sidebar Profile Image
+                const picContainer = document.getElementById('sideProfilePic');
+                if (profile.profileImage) {
+                    picContainer.innerHTML = `<img src="${profile.profileImage}" class="w-full h-full object-cover">`;
+                } else {
+                    picContainer.innerHTML = `<i class="fa-solid fa-building-ngo"></i>`;
+                }
+
+                // Update Sidebar Profile Info
+                document.getElementById('sideFoundationName').innerText = profile.displayName || profile.username;
+                document.getElementById('sideUsername').innerText = `@${profile.username}`;
+                document.getElementById('sideLocation').innerText = profile.location || 'Not set';
+                document.getElementById('sideChildrenCount').innerText = profile.childrenCount || 0;
+                document.getElementById('sideContact').innerText = profile.contactNumber || 'No phone provided';
+                document.getElementById('sideLastLogin').innerText = profile.lastLogin ? new Date(profile.lastLogin).toLocaleDateString() : 'New Account';
+
+                if (profile.latitude !== null && profile.longitude !== null && profile.latitude !== undefined) {
+                    document.getElementById('profLat').value = profile.latitude;
+                    document.getElementById('profLon').value = profile.longitude;
+                    const gpsDisplay = document.getElementById('sideGpsStatus');
+                    if (gpsDisplay) {
+                        gpsDisplay.classList.remove('hidden');
+                        document.getElementById('sideCoords').innerText = `${parseFloat(profile.latitude).toFixed(4)}, ${parseFloat(profile.longitude).toFixed(4)}`;
+                    }
+                }
+
+                document.getElementById('profUsername').value = profile.username || '';
+                document.getElementById('profRole').value = profile.role || 'anadhasaranalayam';
+                document.getElementById('profStatus').value = profile.status || 'approved';
+                document.getElementById('profDisplayName').value = profile.displayName || '';
+                document.getElementById('profLocation').value = profile.location || '';
+                document.getElementById('profChildren').value = profile.childrenCount || 0;
+                document.getElementById('profPhone').value = profile.contactNumber || '';
+                document.getElementById('profAddress').value = profile.address || '';
+                document.getElementById('profLocEnabled').checked = profile.locationEnabled !== 0;
+                document.getElementById('reqAddress').value = profile.address || ''; // Default to home address
+                document.getElementById('profBio').value = profile.bio || '';
+                updateBioCount();
+            } catch (err) { console.error(err); }
+        }
+
+        function setNeed(item) {
+            document.getElementById('reqItem').value = item;
+        }
+
+        async function fetchLiveLocation(event, targetId = 'profAddress') {
+            const btn = event.currentTarget;
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i>Detecting...';
+
+            if (!navigator.geolocation) {
+                alert("Geolocation is not supported.");
+                btn.disabled = false; btn.innerHTML = originalText;
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(async (pos) => {
+                try {
+                    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`);
+                    const data = await res.json();
+                    document.getElementById('profLat').value = pos.coords.latitude;
+                    document.getElementById('profLon').value = pos.coords.longitude;
+                    document.getElementById(targetId).value = data.display_name || `${pos.coords.latitude}, ${pos.coords.longitude}`;
+                    
+                    const gpsDisplay = document.getElementById('sideGpsStatus');
+                    if (gpsDisplay) {
+                        gpsDisplay.classList.remove('hidden');
+                        document.getElementById('sideCoords').innerText = `${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`;
+                    }
+
+                    showToast('Location updated!');
+                } catch (e) { alert("Detection failed."); }
+                finally { btn.disabled = false; btn.innerHTML = originalText; }
+            }, () => { alert("Access denied."); btn.disabled = false; btn.innerHTML = originalText; });
+        }
+
+        function updateBioCount() {
+            const bio = document.getElementById('profBio');
+            const count = document.getElementById('bioCharCount');
+            if (!bio || !count) return;
+            count.innerText = `${bio.value.length}/500`;
+            if (bio.value.length >= 450) count.classList.add('text-red-500');
+            else count.classList.remove('text-red-500');
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            toastMessage.innerText = message;
+            
+            clearTimeout(toastTimeout);
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+            
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        function toggleProfileModal() {
+            document.getElementById('profileModal').classList.toggle('hidden');
+        }
+
+        document.getElementById('profileForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const formData = new FormData();
+            formData.append('username', document.getElementById('profUsername').value);
+            const password = document.getElementById('profPassword').value;
+            if (password) formData.append('password', password);
+            
+            // These fields are critical for the "Update full database" request
+            const role = document.getElementById('profRole').value;
+            const status = document.getElementById('profStatus').value;
+            const displayName = document.getElementById('profDisplayName').value;
+            const location = document.getElementById('profLocation').value;
+            const childrenCountVal = parseInt(document.getElementById('profChildren').value);
+
+            if (isNaN(childrenCountVal) || childrenCountVal < 0) {
+                alert("Children count cannot be a negative number.");
+                return;
+            }
+            
+            formData.append('role', role);
+            formData.append('status', status);
+            formData.append('displayName', displayName);
+            formData.append('location', location);
+            formData.append('childrenCount', childrenCountVal);
+            formData.append('contactNumber', document.getElementById('profPhone').value);
+            formData.append('address', document.getElementById('profAddress').value);
+            formData.append('bio', document.getElementById('profBio').value);
+            formData.append('latitude', document.getElementById('profLat').value || '');
+            formData.append('longitude', document.getElementById('profLon').value || '');
+            formData.append('locationEnabled', document.getElementById('profLocEnabled').checked);
+
+            const imageFile = document.getElementById('profImage').files[0];
+            if (imageFile) formData.append('profileImage', imageFile);
+
+            const btn = document.getElementById('profSaveBtn');
+            btn.disabled = true;
+            btn.innerText = 'Saving...';
+
+            const res = await fetch('/api/orphanage/profile', {
+                method: 'PUT',
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+                body: formData
+            });
+
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-floppy-disk mr-2"></i> Save User';
+
+            if (res.ok) {
+                toggleProfileModal();
+                loadProfileAndStats();
+                showToast('Profile updated successfully!');
+            } else {
+                const err = await res.json();
+                alert('Error updating database: ' + (err.message || 'Check server logs'));
+            }
+        };
+
+        function filterRequests() {
+            const query = document.getElementById('reqSearch').value.toLowerCase();
+            const filtered = allRequests.filter(request => 
+                request.item.toLowerCase().includes(query) || 
+                request.quantity.toLowerCase().includes(query) || 
+                request.status.toLowerCase().includes(query) ||
+                request.description.toLowerCase().includes(query)
+            );
+            renderRequests(filtered);
+        }
+
+        function renderRequests(requests) {
+            const list = document.getElementById('requestsList');
+            const noReqs = document.getElementById('noRequests');
+            list.innerHTML = '';
+
+            if (requests.length === 0) {
+                noReqs.classList.remove('hidden');
+            } else {
+                noReqs.classList.add('hidden');
+                requests.forEach(request => {
+                    const fulfilled = (request.numericQuantity - request.remainingNumericQuantity).toFixed(1);
+                    const fulfillmentPercentage = request.numericQuantity > 0 
+                        ? Math.min(100, Math.max(0, ((request.numericQuantity - request.remainingNumericQuantity) / request.numericQuantity) * 100))
+                        : 0;
+                    let statusColor = 'bg-stone-100 text-stone-700';
+                    let progressWidth = 'w-0';
+                    if (request.status === 'approved') statusColor = 'bg-emerald-100 text-emerald-800';
+                    else if (request.status === 'pending') statusColor = 'bg-amber-100 text-amber-700';
+                    else if (request.status === 'accepted') { statusColor = 'bg-blue-100 text-blue-700'; progressWidth = 'w-1/2'; }
+                    else if (request.status === 'claimed') { statusColor = 'bg-blue-100 text-blue-700'; progressWidth = 'w-2/3'; }
+                    else if (request.status === 'reached') { statusColor = 'bg-blue-100 text-blue-700'; progressWidth = 'w-3/4'; }
+                    else if (request.status === 'received') { statusColor = 'bg-blue-100 text-blue-700'; progressWidth = 'w-full'; }
+                    else if (request.status === 'rejected') statusColor = 'bg-red-100 text-red-700';
+
+                    list.innerHTML += `
+                        <div class="p-6 rounded-3xl border-2 border-stone-50 bg-white hover:border-[#A34A38]/20 transition group relative overflow-hidden">
+                            <div class="absolute top-0 left-0 h-1 bg-stone-100 w-full">
+                                <div class="bg-emerald-500 ${progressWidth} h-full transition-all duration-1000"></div>
+                            </div>
+                            <div class="flex justify-between items-start mb-4 pt-2">
+                                <div class="flex-1">
+                                    <div class="flex items-center space-x-2 mb-1">
+                                        <h3 class="font-black text-lg text-stone-900">${request.item}</h3>
+                                        ${request.isUrgent ? `<span class="bg-red-600 text-white text-[8px] font-black px-2 py-0.5 rounded-full animate-pulse shadow-sm tracking-tighter">URGENT</span>` : ''}
+                                    </div>
+                                    <p class="text-xs text-stone-400 font-bold uppercase tracking-widest">
+                                        Total: ${request.numericQuantity} ${request.unit} 
+                                        ${request.remainingNumericQuantity > 0 ? `<span class="text-red-500 ml-2">• Need ${request.remainingNumericQuantity} more</span>` : ''}
+                                    </p>
+                                    <!-- Fulfillment Progress Bar -->
+                                    <div class="mt-2 w-full bg-stone-100 h-1.5 rounded-full overflow-hidden max-w-md">
+                                        <div class="bg-[#A34A38] h-full transition-all duration-1000" style="width: ${fulfillmentPercentage}%"></div>
+                                    </div>
+                                    <p class="text-[9px] font-black text-stone-400 uppercase tracking-tighter mt-1">${fulfillmentPercentage.toFixed(0)}% FULFILLED (${fulfilled} ${request.unit} Received)</p>
+                                </div>
+                                <span class="text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-widest ${statusColor} border border-current/10">${request.status}</span>
+                            </div>
+                            
+                            <p class="text-sm text-stone-600 leading-relaxed mb-4 line-clamp-2 italic">"${request.description}"</p>
+
+                            <div class="flex flex-col sm:flex-row justify-between items-center mt-6 pt-4 border-t border-stone-50 gap-4">
+                                ${request.donorId ? `
+                                    <div class="text-[10px] text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-100 flex items-center shadow-sm w-full sm:w-auto">
+                                        <i class="fa-solid fa-hand-holding-heart mr-1.5 animate-pulse"></i>
+                                        <span class="font-bold">Donor: ${request.donorName || 'Anonymous'}</span>
+                                    </div>
+                                ` : `<span class="text-[10px] text-stone-300 font-bold uppercase"><i class="fa-solid fa-hourglass-start mr-1"></i> Awaiting Support</span>`}
+                                
+                                <div class="flex items-center space-x-3 w-full sm:w-auto justify-end">
+                                    <p class="text-[10px] text-stone-300 font-mono mr-2">${new Date(request.createdAt).toLocaleDateString()}</p>
+                                    ${request.status === 'pending' ? `<button onclick="cancelRequest(${request.id})" class="text-[10px] text-red-600 font-black uppercase hover:underline">Cancel</button>` : ''}
+                                    ${['approved', 'accepted', 'claimed', 'reached'].includes(request.status) ? 
+                                        `<button onclick="markAsReceived(${request.id})" class="bg-stone-900 text-white text-[10px] font-black uppercase px-5 py-2.5 rounded-xl hover:bg-black transition shadow-lg shadow-stone-900/10 active:scale-95">Received</button>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+        }
+
+        async function autoLocationSync() {
+            if (!navigator.geolocation) return;
+            
+            navigator.geolocation.getCurrentPosition(async (pos) => {
+                const { latitude, longitude } = pos.coords;
+                try {
+                    const res = await fetch('/api/user/location', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+                        body: JSON.stringify({ latitude, longitude })
+                    });
+                    if (res.ok) {
+                        const gpsDisplay = document.getElementById('sideGpsStatus');
+                        if (gpsDisplay) {
+                            gpsDisplay.classList.remove('hidden');
+                            document.getElementById('sideCoords').innerText = `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
+                        }
+                        // Also update profile modal hidden fields
+                        document.getElementById('profLat').value = latitude;
+                        document.getElementById('profLon').value = longitude;
+                    }
+                } catch (e) { console.warn("Auto-location sync failed."); }
+            });
+        }
+
+        async function toggleSettingsModal() {
+            const modal = document.getElementById('settingsModal');
+            if (modal.classList.contains('hidden')) {
+                try {
+                    const res = await fetch('/api/user/settings', {
+                        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                    });
+                    const data = await res.json();
+                    document.getElementById('settingLocEnabled').checked = data.locationEnabled === 1;
+                } catch (e) { console.error(e); }
+            }
+            modal.classList.toggle('hidden');
+        }
+
+        async function updateLocationSetting(enabled) {
+            try {
+                await fetch('/api/user/settings', {
+                    method: 'PUT',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify({ locationEnabled: enabled })
+                });
+                showToast(enabled ? 'Location enabled' : 'Location disabled');
+                if (enabled) autoLocationSync();
+            } catch (e) { console.error(e); }
+        }
+
+        async function loadRequests() {
+            try {
+                const response = await fetch('/api/orphanage/requests', {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+                if (!response.ok) {
+                    document.getElementById('requestsList').innerHTML = `<p class="text-red-500 text-center py-4">Access Denied: Please log in.</p>`;
+                    return;
+                }
+                allRequests = await response.json();
+                renderRequests(allRequests);
+            } catch (error) { document.getElementById('requestsList').innerHTML = `<p class="text-red-500">Load Error.</p>`; }
+        }
+
+        async function markAsReceived(id) {
+            const note = prompt("Fulfilled! Would you like to send a short 'Thank You' message to the donor?");
+            if (note === null) return; // User cancelled the action
+
+            const res = await fetch(`/api/orphanage/requests/${id}/received`, {
+                method: 'PUT',
+                headers: { 
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ thankYouNote: note })
+            });
+            if (res.ok) { loadRequests(); loadProfileAndStats(); }
+        }
+
+        async function cancelRequest(id) {
+            if (!confirm('Cancel this pending request?')) return;
+            const res = await fetch(`/api/orphanage/requests/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            });
+            if (res.ok) loadRequests();
+        }
+
+        document.getElementById('newRequestForm').onsubmit = async (e) => {
+            e.preventDefault();
+
+            const submitForm = async () => {
+                const data = {
+                    item: document.getElementById('reqItem').value,
+                    quantity: document.getElementById('reqNumericQty').value + ' ' + document.getElementById('reqUnit').value,
+                    numericQuantity: parseFloat(document.getElementById('reqNumericQty').value),
+                    unit: document.getElementById('reqUnit').value,
+                    description: document.getElementById('reqDesc').value,
+                    servesCount: parseInt(document.getElementById('reqServes').value) || 0,
+                    address: document.getElementById('reqAddress').value,
+                    isUrgent: document.getElementById('reqIsUrgent').checked,
+                    latitude: document.getElementById('profLat').value || null,
+                    longitude: document.getElementById('profLon').value || null
+                };
+                const res = await fetch('/api/orphanage/requests', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+                    body: JSON.stringify(data)
+                });
+                if (res.ok) {
+                    alert('Request submitted to Admin.');
+                    e.target.reset();
+                    loadRequests();
+                    loadProfileAndStats();
+                }
+            };
+            
+            const isUrgent = document.getElementById('reqIsUrgent').checked;
+            const lat = document.getElementById('profLat').value;
+            const lon = document.getElementById('profLon').value;
+
+            if (isUrgent && (!lat || !lon)) {
+                if (navigator.geolocation) {
+                    showToast("Detecting location for urgent map...");
+                    navigator.geolocation.getCurrentPosition(async (pos) => {
+                        document.getElementById('profLat').value = pos.coords.latitude;
+                        document.getElementById('profLon').value = pos.coords.longitude;
+                        await submitForm();
+                    }, () => {
+                        alert("Error: Location access is required for urgent requests to appear on the donor map.");
+                    });
+                } else {
+                    alert("Geolocation is not supported by your browser.");
+                }
+                return;
+            }
+
+            await submitForm();
+        };
+
+        function logout() { localStorage.clear(); window.location.href = 'index.html'; }
+    </script>
+</body>
+</html>
